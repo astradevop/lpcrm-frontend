@@ -10,6 +10,7 @@ import {
 import Navbar from '../Components/layouts/Navbar';
 import { useAuth } from '../context/AuthContext';
 import KanbanBoard from '../Components/KanbanBoard';
+import { downloadCSV, downloadPDF } from '../utils/exportUtils';
 
 // Roles that are allowed to create / assign tasks  (mirrors permissions.py)
 const TASK_ASSIGNER_ROLES = ['ADMIN', 'CEO', 'OPS', 'GENERAL_MANAGER', 'CM', 'BDM', 'HR'];
@@ -28,10 +29,11 @@ export default function TasksPage() {
   const [hasNext, setHasNext]   = useState(false);
   const [hasPrev, setHasPrev]   = useState(false);
 
-  // FIX: Filters are sent server-side, not filtered client-side
   const [searchTerm,      setSearchTerm]      = useState('');
   const [filterStatus,    setFilterStatus]    = useState('all');
   const [filterPriority,  setFilterPriority]  = useState('all');
+  const [filterDate,      setFilterDate]      = useState('all');
+  const [filterSpecificDate, setFilterSpecificDate] = useState('');
 
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(null);
@@ -124,6 +126,14 @@ export default function TasksPage() {
       if (searchTerm)                           params.set('search',   searchTerm);
       if (filterStatus   && filterStatus   !== 'all') params.set('status',   filterStatus);
       if (filterPriority && filterPriority !== 'all') params.set('priority', filterPriority);
+      
+      if (filterDate && filterDate !== 'all') {
+        if (filterDate === 'custom' && filterSpecificDate) {
+          params.set('date_filter', filterSpecificDate);
+        } else if (filterDate !== 'custom') {
+          params.set('date_filter', filterDate);
+        }
+      }
 
       const res = await fetch(`${API_BASE_URL}/tasks/?${params}`, {
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -140,10 +150,10 @@ export default function TasksPage() {
     } finally {
       setLoading(false);
     }
-  }, [API_BASE_URL, getToken, page, searchTerm, filterStatus, filterPriority]);
+  }, [API_BASE_URL, getToken, page, searchTerm, filterStatus, filterPriority, filterDate, filterSpecificDate]);
 
   // Reset to page 1 when filters change
-  useEffect(() => { setPage(1); }, [searchTerm, filterStatus, filterPriority]);
+  useEffect(() => { setPage(1); }, [searchTerm, filterStatus, filterPriority, filterDate, filterSpecificDate]);
 
   useEffect(() => {
     fetchTasks();
@@ -212,6 +222,25 @@ export default function TasksPage() {
       ? new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
       : 'No deadline';
 
+  const handleExportCSV = () => {
+    const data = tasks.map(t => ({
+      ID: t.id,
+      Title: t.title,
+      Status: t.status,
+      Priority: t.priority,
+      'Assigned To': t.assigned_to_name,
+      'Assigned By': t.assigned_by_name,
+      Deadline: formatDate(t.deadline),
+      Description: t.description
+    }));
+    downloadCSV(data, 'tasks_export.csv');
+  };
+
+  const handleExportPDF = () => {
+    const el = document.getElementById('tasks-exportable-view');
+    if (el) downloadPDF(el, 'tasks_export.pdf');
+  };
+
   // ── Render states ──────────────────────────────────────────────────────────
 
   if (loading) {
@@ -273,15 +302,29 @@ export default function TasksPage() {
             </div>
 
             {/* FIX: visible to all TASK_ASSIGNERS, not just ADMIN */}
-            {canAssignTasks && (
+            <div className="flex items-center gap-3">
               <button
-                onClick={() => navigate('/tasks/new')}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
+                onClick={handleExportCSV}
+                className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2.5 rounded-xl font-medium shadow-sm transition-all text-sm"
               >
-                <Plus size={20} />
-                Create New Task
+                CSV
               </button>
-            )}
+              <button
+                onClick={handleExportPDF}
+                className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2.5 rounded-xl font-medium shadow-sm transition-all text-sm"
+              >
+                PDF
+              </button>
+              {canAssignTasks && (
+                <button
+                  onClick={() => navigate('/tasks/new')}
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
+                >
+                  <Plus size={20} />
+                  Create New Task
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -347,7 +390,7 @@ export default function TasksPage() {
               </button>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Search */}
             <div className="md:col-span-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -386,6 +429,29 @@ export default function TasksPage() {
               <option value="MEDIUM">Medium</option>
               <option value="LOW">Low</option>
             </select>
+
+            {/* Date filter */}
+            <div className="flex gap-2">
+              <select
+                value={filterDate}
+                onChange={(e) => setFilterDate(e.target.value)}
+                className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium text-gray-700 bg-white"
+              >
+                <option value="all">All Dates</option>
+                <option value="today">Today</option>
+                <option value="yesterday">Yesterday</option>
+                <option value="custom">Specific Date</option>
+              </select>
+              
+              {filterDate === 'custom' && (
+                <input 
+                  type="date"
+                  value={filterSpecificDate}
+                  onChange={(e) => setFilterSpecificDate(e.target.value)}
+                  className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium text-gray-700 bg-white"
+                />
+              )}
+            </div>
           </div>
         </div>
 
@@ -412,14 +478,16 @@ export default function TasksPage() {
             )}
           </div>
         ) : viewMode === 'kanban' ? (
-          <KanbanBoard 
-            tasks={tasks} 
-            onDragEnd={onDragEnd} 
-            canAssignTasks={canAssignTasks} 
-            currentUser={user} 
-          />
+          <div id="tasks-exportable-view">
+            <KanbanBoard 
+              tasks={tasks} 
+              onDragEnd={onDragEnd} 
+              canAssignTasks={canAssignTasks} 
+              currentUser={user} 
+            />
+          </div>
         ) : (
-          <div className="space-y-4">
+          <div id="tasks-exportable-view" className="space-y-4">
             {tasks.map((task) => (
               <div
                 key={task.id}

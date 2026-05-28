@@ -27,6 +27,8 @@ export default function AttendanceMarkingPage() {
   // New filters
   const [trainerFilter, setTrainerFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
+  const [branchFilter, setBranchFilter] = useState('');
+  const [branches, setBranches] = useState([]);
 
   // Fetch students for the trainer (excludes COMPLETED students)
   const fetchStudents = useCallback(async () => {
@@ -38,6 +40,7 @@ export default function AttendanceMarkingPage() {
       const params = new URLSearchParams();
       if (trainerFilter) params.append('trainer', trainerFilter);
       if (locationFilter) params.append('location', locationFilter);
+      if (branchFilter) params.append('branch_id', branchFilter);
 
       const res = await fetch(`${API_BASE_URL}/attendance/students/?${params.toString()}`, {
         headers: { 
@@ -126,7 +129,25 @@ const fetchAttendance = useCallback(async (studentsList) => {
   // Load students on mount and when filters change
   useEffect(() => {
     fetchStudents();
-  }, [fetchStudents, trainerFilter, locationFilter]);
+  }, [fetchStudents, trainerFilter, locationFilter, branchFilter]);
+
+  // Load branches
+  useEffect(() => {
+    const fetchBranches = async () => {
+      let token = accessToken;
+      if (!token) return;
+      try {
+        const res = await fetch(`${API_BASE_URL}/branches/`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        setBranches(data || []);
+      } catch (err) {
+        console.error('Failed to fetch branches', err);
+      }
+    };
+    fetchBranches();
+  }, [accessToken]);
 
   // Fetch attendance when students are loaded or date changes
   useEffect(() => {
@@ -293,6 +314,19 @@ const fetchAttendance = useCallback(async (studentsList) => {
               onChange={(e) => setLocationFilter(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
             />
+          </div>
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Branch</label>
+            <select
+              value={branchFilter}
+              onChange={(e) => setBranchFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-white"
+            >
+              <option value="">All Branches</option>
+              {branches.map((b) => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
           </div>
         </div>
 

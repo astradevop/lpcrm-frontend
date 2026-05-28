@@ -19,6 +19,7 @@ import {
   MoreVertical,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { downloadCSV, downloadPDF } from '../utils/exportUtils';
 import Pagination from '../Components/common/Pagination';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -30,6 +31,9 @@ export default function StaffPage() {
   const [staffMembers, setStaffMembers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDepartment, setFilterDepartment] = useState('all');
+  const [filterBranch, setFilterBranch] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('active'); // active, inactive, all
+  const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({
     count: 0,
@@ -71,7 +75,7 @@ export default function StaffPage() {
   );
 
   const fetchStaff = useCallback(
-    async (page = 1, search = '', team = '') => {
+    async (page = 1, search = '', team = '', branch = '', status = 'active') => {
       if (!accessToken) return;
 
       setLoading(true);
@@ -79,6 +83,8 @@ export default function StaffPage() {
         const queryParams = new URLSearchParams();
         if (search) queryParams.append('search', search);
         if (team && team !== 'all') queryParams.append('team', team);
+        if (branch && branch !== 'all') queryParams.append('branch_id', branch);
+        if (status && status !== 'all') queryParams.append('status', status);
         queryParams.append('page', page);
         queryParams.append('page_size', '50'); // Request 50 items per page
 
@@ -131,19 +137,32 @@ export default function StaffPage() {
 
   useEffect(() => {
     if (authLoading || !accessToken) return;
-    fetchStaff(1, searchTerm, filterDepartment);
-  }, [authLoading, accessToken, filterDepartment]);
+    
+    // Fetch branches
+    const fetchBranches = async () => {
+      try {
+        const res = await authFetch(`${API_BASE_URL}/branches/`);
+        const data = await res.json();
+        setBranches(data || []);
+      } catch (err) {
+        console.error('Failed to load branches', err);
+      }
+    };
+    fetchBranches();
+
+    fetchStaff(1, searchTerm, filterDepartment, filterBranch, filterStatus);
+  }, [authLoading, accessToken, filterDepartment, filterBranch, filterStatus]);
 
   // Search debounce
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!authLoading && accessToken) {
-        fetchStaff(1, searchTerm, filterDepartment);
+        fetchStaff(1, searchTerm, filterDepartment, filterBranch, filterStatus);
       }
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchTerm, filterDepartment, accessToken, authLoading]);
+  }, [searchTerm, filterDepartment, filterBranch, filterStatus, accessToken, authLoading]);
 
   // Delete staff member
   const handleDelete = async (staffId) => {
@@ -154,7 +173,7 @@ export default function StaffPage() {
         method: 'DELETE',
       });
 
-      fetchStaff(pagination.currentPage, searchTerm, filterDepartment);
+      fetchStaff(pagination.currentPage, searchTerm, filterDepartment, filterBranch, filterStatus);
       alert('Staff member deleted successfully');
     } catch (err) {
       console.error('Failed to delete staff:', err);
@@ -183,7 +202,7 @@ export default function StaffPage() {
 
   // Pagination handlers
   const handlePageClick = (page) => {
-    fetchStaff(page, searchTerm, filterDepartment);
+    fetchStaff(page, searchTerm, filterDepartment, filterBranch, filterStatus);
   };
 
   // Helper function to get gradient color based on name
@@ -199,6 +218,24 @@ export default function StaffPage() {
     ];
     const index = name.charCodeAt(0) % gradients.length;
     return gradients[index];
+  };
+
+  const handleExportCSV = () => {
+    const data = staffMembers.map(s => ({
+      Name: s.name,
+      Email: s.email,
+      Phone: s.phone,
+      Role: s.role,
+      Department: s.department,
+      Status: s.status,
+      'Join Date': s.joinDate
+    }));
+    downloadCSV(data, 'staff_export.csv');
+  };
+
+  const handleExportPDF = () => {
+    const el = document.getElementById('staff-exportable-view');
+    if (el) downloadPDF(el, 'staff_export.pdf');
   };
 
   if (authLoading) return <div className="p-10 text-center">Checking session…</div>;
@@ -219,13 +256,27 @@ export default function StaffPage() {
               </h1>
               <p className="text-slate-600 mt-2 text-lg">Manage your team members and their roles</p>
             </div>
-            <button
-              onClick={() => navigate('/staff/create')}
-              className="group relative bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-8 py-3.5 rounded-xl font-semibold flex items-center gap-3 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-            >
-              <Plus size={22} className="group-hover:rotate-90 transition-transform duration-300" />
-              Add Staff Member
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleExportCSV}
+                className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2.5 rounded-xl font-medium shadow-sm transition-all text-sm"
+              >
+                CSV
+              </button>
+              <button
+                onClick={handleExportPDF}
+                className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2.5 rounded-xl font-medium shadow-sm transition-all text-sm"
+              >
+                PDF
+              </button>
+              <button
+                onClick={() => navigate('/staff/create')}
+                className="group relative bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-8 py-3.5 rounded-xl font-semibold flex items-center gap-3 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                <Plus size={22} className="group-hover:rotate-90 transition-transform duration-300" />
+                Add Staff Member
+              </button>
+            </div>
           </div>
         </div>
 
@@ -255,7 +306,31 @@ export default function StaffPage() {
           })}
         </div>
 
-        {/* Enhanced Search and Filter Bar */}
+        {/* Status Tabs */}
+        <div className="mb-6 border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            {[
+              { id: 'all', label: 'All Staff' },
+              { id: 'active', label: 'Active' },
+              { id: 'inactive', label: 'Inactive' }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => { setFilterStatus(tab.id); }}
+                className={`
+                  whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm transition-colors
+                  ${filterStatus === tab.id
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
+                `}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Search & Filters */}
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-slate-200">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1 relative group">
@@ -284,6 +359,22 @@ export default function StaffPage() {
                 ))}
               </select>
             </div>
+
+            <div className="relative group">
+              <MapPin className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors pointer-events-none" size={20} />
+              <select
+                value={filterBranch}
+                onChange={(e) => setFilterBranch(e.target.value)}
+                className="appearance-none pl-12 pr-10 py-3.5 border-2 border-slate-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 transition-all duration-200 text-slate-700 font-medium bg-white cursor-pointer min-w-[200px]"
+              >
+                <option value="all">All Branches</option>
+                {branches.map((branch) => (
+                  <option key={branch.id} value={branch.id}>
+                    {branch.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -299,7 +390,7 @@ export default function StaffPage() {
             <p className="text-slate-500 text-lg">No staff members found</p>
           </div>
         ) : (
-          <>
+          <div id="staff-exportable-view">
             {/* Staff Cards - With Professional Initials Avatar */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {staffMembers.map((staff) => (
@@ -385,7 +476,7 @@ export default function StaffPage() {
                 className="mt-8"
               />
             )}
-          </>
+          </div>
         )}
       </div>
     </div>

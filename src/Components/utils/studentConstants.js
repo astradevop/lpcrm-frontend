@@ -23,6 +23,7 @@ export const STATUS_CHOICES = [
 export const initialStudentFormData = {
   name: '',
   academic_batch: '',
+  branch: '',
   trainer: '',
   status: 'ACTIVE',
   admission_date: new Date().toISOString().split('T')[0],

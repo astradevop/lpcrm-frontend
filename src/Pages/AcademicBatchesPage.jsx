@@ -15,6 +15,14 @@ export default function AcademicBatchesPage() {
   const [editingBatch, setEditingBatch] = useState(null);
   const [message, setMessage] = useState(null);
 
+  // Marks Management State
+  const [showMarksModal, setShowMarksModal] = useState(false);
+  const [selectedBatchMarks, setSelectedBatchMarks] = useState(null);
+  const [examType, setExamType] = useState('MODEL');
+  const [studentsInBatch, setStudentsInBatch] = useState([]);
+  const [examResults, setExamResults] = useState({}); // { student_id: { id, score, remarks } }
+  const [marksLoading, setMarksLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     name: '',
     academic_year: new Date().getFullYear().toString(),
@@ -123,6 +131,110 @@ export default function AcademicBatchesPage() {
     }
   };
 
+  // ----- Marks Management -----
+  const openMarksModal = (batch) => {
+    setSelectedBatchMarks(batch);
+    setExamType('MODEL');
+    setShowMarksModal(true);
+    fetchMarksData(batch.id, 'MODEL');
+  };
+
+  const fetchMarksData = async (batchId, type) => {
+    setMarksLoading(true);
+    try {
+      let token = accessToken || await refreshAccessToken();
+      
+      // Fetch students for this batch
+      const studentsRes = await fetch(`${API_BASE_URL}/students/?academic_batch=${batchId}&page_size=100`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const studentsData = await studentsRes.json();
+      const fetchedStudents = studentsData.results || studentsData;
+      setStudentsInBatch(fetchedStudents);
+
+      // Fetch exam results for this batch and exam type
+      const resultsRes = await fetch(`${API_BASE_URL}/trainers/exam-results/?academic_batch_id=${batchId}&exam_type=${type}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const resultsData = await resultsRes.json();
+      
+      const resultsMap = {};
+      resultsData.forEach(r => {
+        resultsMap[r.student] = { id: r.id, score: r.score, remarks: r.remarks || '' };
+      });
+      setExamResults(resultsMap);
+      
+    } catch (err) {
+      console.error(err);
+      setMessage({ type: 'error', text: 'Failed to load students and marks data.' });
+    } finally {
+      setMarksLoading(false);
+    }
+  };
+
+  const handleExamTypeChange = (e) => {
+    const newType = e.target.value;
+    setExamType(newType);
+    if (selectedBatchMarks) {
+      fetchMarksData(selectedBatchMarks.id, newType);
+    }
+  };
+
+  const handleMarkChange = (studentId, field, value) => {
+    setExamResults(prev => ({
+      ...prev,
+      [studentId]: {
+        ...prev[studentId],
+        [field]: value
+      }
+    }));
+  };
+
+  const saveMarks = async () => {
+    try {
+      setMarksLoading(true);
+      let token = accessToken || await refreshAccessToken();
+      
+      const promises = studentsInBatch.map(async (student) => {
+        const result = examResults[student.id];
+        if (!result || !result.score) return; // Skip empty
+        
+        const payload = {
+          student: student.id,
+          academic_batch: selectedBatchMarks.id,
+          exam_type: examType,
+          score: result.score,
+          remarks: result.remarks
+        };
+
+        if (result.id) {
+          return fetch(`${API_BASE_URL}/trainers/exam-results/${result.id}/`, {
+            method: 'PUT',
+            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        } else {
+          return fetch(`${API_BASE_URL}/trainers/exam-results/`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+        }
+      });
+      
+      await Promise.all(promises);
+      setMessage({ type: 'success', text: 'Marks saved successfully!' });
+      setShowMarksModal(false);
+      setTimeout(() => setMessage(null), 3000);
+    } catch (err) {
+      console.error(err);
+      setMessage({ type: 'error', text: 'Failed to save marks.' });
+    } finally {
+      setMarksLoading(false);
+    }
+  };
+
+
   return (
     <div className="min-h-screen bg-slate-50">
       <Navbar />
@@ -174,8 +286,9 @@ export default function AcademicBatchesPage() {
                             <div className="flex items-start justify-between mb-3">
                               <h4 className="text-lg font-bold text-gray-900">{batch.name}</h4>
                               <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onClick={() => openEditModal(batch)} className="text-blue-500 hover:text-blue-700 p-1 bg-blue-50 rounded"><Edit size={14} /></button>
-                                <button onClick={() => handleDelete(batch.id)} className="text-red-500 hover:text-red-700 p-1 bg-red-50 rounded"><Trash2 size={14} /></button>
+                                <button onClick={() => openMarksModal(batch)} className="text-emerald-500 hover:text-emerald-700 p-1 bg-emerald-50 rounded" title="Manage Marks"><BookOpen size={14} /></button>
+                                <button onClick={() => openEditModal(batch)} className="text-blue-500 hover:text-blue-700 p-1 bg-blue-50 rounded" title="Edit"><Edit size={14} /></button>
+                                <button onClick={() => handleDelete(batch.id)} className="text-red-500 hover:text-red-700 p-1 bg-red-50 rounded" title="Delete"><Trash2 size={14} /></button>
                               </div>
                             </div>
                             
@@ -246,6 +359,76 @@ export default function AcademicBatchesPage() {
                   <button type="submit" className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Save Batch</button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Marks Management Modal */}
+        {showMarksModal && selectedBatchMarks && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl p-6 max-w-4xl w-full shadow-2xl max-h-[90vh] flex flex-col">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">Manage Marks: {selectedBatchMarks.name}</h2>
+                <select 
+                  value={examType} 
+                  onChange={handleExamTypeChange}
+                  className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 bg-gray-50 font-medium"
+                >
+                  <option value="MODEL">Model Exam</option>
+                  <option value="FINAL">Final Exam</option>
+                </select>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto pr-2">
+                {marksLoading ? (
+                  <div className="text-center py-10 text-gray-500">Loading student data...</div>
+                ) : studentsInBatch.length === 0 ? (
+                  <div className="text-center py-10 text-gray-500">No students enrolled in this batch.</div>
+                ) : (
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b-2 border-gray-200">
+                        <th className="py-3 font-semibold text-gray-600">Student Name</th>
+                        <th className="py-3 font-semibold text-gray-600 w-32">Score</th>
+                        <th className="py-3 font-semibold text-gray-600">Remarks</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {studentsInBatch.map(student => (
+                        <tr key={student.id} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-3 font-medium text-gray-900">{student.name}</td>
+                          <td className="py-3 pr-4">
+                            <input 
+                              type="number" 
+                              step="0.01"
+                              value={examResults[student.id]?.score || ''}
+                              onChange={(e) => handleMarkChange(student.id, 'score', e.target.value)}
+                              className="w-full px-3 py-2 border rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                              placeholder="Score"
+                            />
+                          </td>
+                          <td className="py-3">
+                            <input 
+                              type="text" 
+                              value={examResults[student.id]?.remarks || ''}
+                              onChange={(e) => handleMarkChange(student.id, 'remarks', e.target.value)}
+                              className="w-full px-3 py-2 border rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                              placeholder="Optional remarks"
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+              
+              <div className="flex gap-3 justify-end mt-6 pt-4 border-t border-gray-100">
+                <button type="button" onClick={() => setShowMarksModal(false)} className="px-6 py-2.5 text-gray-600 hover:bg-gray-100 rounded-lg font-medium transition-colors">Cancel</button>
+                <button type="button" onClick={saveMarks} disabled={marksLoading} className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-medium transition-colors flex items-center gap-2">
+                  {marksLoading ? 'Saving...' : 'Save Marks'}
+                </button>
+              </div>
             </div>
           </div>
         )}

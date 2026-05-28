@@ -13,6 +13,8 @@ export default function StudentFormFields({
   statusChoices,
   academicBatches = [],
   batchesLoading = false,
+  branches = [],
+  branchesLoading = false,
 }) {
   // Transform trainers for select options
   const trainerOptions = trainers.map(trainer => ({
@@ -26,6 +28,11 @@ export default function StudentFormFields({
   const batchOptions = academicBatches.map(batch => ({
     value: batch.id,
     label: `${batch.name} (${batch.academic_year}) - ${batch.grade}`
+  }));
+
+  const branchOptions = branches.map(branch => ({
+    value: branch.id,
+    label: branch.name
   }));
 
   return (
@@ -126,6 +133,24 @@ export default function StudentFormFields({
             />
             {trainers.length === 0 && !trainersLoading && (
               <p className="mt-1 text-sm text-yellow-600">No trainers available</p>
+            )}
+          </div>
+
+          {/* Branch */}
+          <div>
+            <FormField
+              label="Branch"
+              name="branch"
+              type="select"
+              value={formData.branch}
+              onChange={onChange}
+              options={branchOptions}
+              placeholder={branchesLoading ? 'Loading branches...' : 'Select Branch'}
+              required
+              error={errors.branch}
+            />
+            {branches.length === 0 && !branchesLoading && (
+              <p className="mt-1 text-sm text-yellow-600">No branches available</p>
             )}
           </div>
 

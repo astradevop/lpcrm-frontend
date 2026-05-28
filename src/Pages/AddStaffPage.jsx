@@ -17,7 +17,23 @@ export default function AddStaffPage() {
   const [formData, setFormData] = useState(initialFormData);
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState({});
+  const [branches, setBranches] = useState([]);
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/branches/`, {
+          headers: { Authorization: `Bearer ${accessToken}` }
+        });
+        const data = await res.json();
+        setBranches(data || []);
+      } catch (err) {
+        console.error('Failed to load branches', err);
+      }
+    };
+    if (accessToken) fetchBranches();
+  }, [accessToken, API_BASE_URL]);
 
   const handleInputChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
@@ -76,7 +92,8 @@ export default function AddStaffPage() {
       team: formData.team || '',
       is_active: formData.isActive,
       salary: formData.salary ? parseFloat(formData.salary) : null,
-      password: formData.password
+      password: formData.password,
+      branch_id: formData.branch || null,
     };
 
 
@@ -178,6 +195,7 @@ export default function AddStaffPage() {
             formData={formData}
             errors={errors}
             onChange={handleInputChange}
+            branches={branches}
           />
 
           <SecuritySection

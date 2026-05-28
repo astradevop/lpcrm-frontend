@@ -17,6 +17,8 @@ export default function AddStudentPage() {
     trainersLoading,
     academicBatches,
     batchesLoading,
+    branches,
+    branchesLoading,
     loading,
     errors,
     handleChange,
@@ -62,6 +64,8 @@ export default function AddStudentPage() {
               trainersLoading={trainersLoading}
               academicBatches={academicBatches}
               batchesLoading={batchesLoading}
+              branches={branches}
+              branchesLoading={branchesLoading}
               onChange={handleChange}
               batchChoices={BATCH_CHOICES}
               statusChoices={STATUS_CHOICES}

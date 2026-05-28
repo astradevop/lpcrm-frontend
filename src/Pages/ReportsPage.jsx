@@ -2,9 +2,11 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../Components/layouts/Navbar';
 import Pagination from '../Components/common/Pagination';
 import { Calendar, FileText, Download, FolderOpen, TrendingUp, Clock, CheckCircle, Eye, AlertCircle, XCircle, Paperclip } from 'lucide-react';
+import { downloadCSV, downloadPDF } from '../utils/exportUtils';
 
 export default function ReportsPage() {
   const { accessToken } = useAuth();
@@ -114,6 +116,41 @@ export default function ReportsPage() {
     }
   };
 
+  const isLateReport = (report) => {
+    if (!report.created_at) return false;
+    const date = new Date(report.created_at);
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    
+    if (report.report_type === 'MORNING') {
+      // Late if submitted after 10:30 AM
+      return hours > 10 || (hours === 10 && minutes > 30);
+    } else if (report.report_type === 'EVENING') {
+      // Late if submitted after 6:00 PM (18:00)
+      return hours > 18 || (hours === 18 && minutes > 0);
+    }
+    return false;
+  };
+
+  const handleExportCSV = () => {
+    const data = recentReports.map(r => ({
+      ID: r.id,
+      'Report Name': r.name,
+      Heading: r.heading,
+      'Report Type': r.report_type,
+      'Submitted By': r.user_name || 'N/A',
+      Date: r.report_date,
+      Status: r.status,
+      Late: isLateReport(r) ? 'Yes' : 'No'
+    }));
+    downloadCSV(data, 'reports_export.csv');
+  };
+
+  const handleExportPDF = () => {
+    const el = document.getElementById('reports-exportable-view');
+    if (el) downloadPDF(el, 'reports_export.pdf');
+  };
+
   const stats = [
     { label: 'Total Reports', value: statsData?.total || 0, color: 'from-blue-500 to-blue-600', icon: FolderOpen },
     { label: 'This Month', value: statsData?.this_month || 0, color: 'from-purple-500 to-indigo-600', icon: TrendingUp },
@@ -161,15 +198,29 @@ export default function ReportsPage() {
         <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-900">All Reports</h2>
-            <button
-              onClick={() => { fetchReports(page); fetchStats(); }}
-              className="text-indigo-600 text-sm font-semibold hover:text-indigo-700 hover:underline transition-colors"
-            >
-              Refresh →
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleExportCSV}
+                className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg font-medium shadow-sm transition-all text-sm"
+              >
+                CSV
+              </button>
+              <button
+                onClick={handleExportPDF}
+                className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg font-medium shadow-sm transition-all text-sm"
+              >
+                PDF
+              </button>
+              <button
+                onClick={() => { fetchReports(page); fetchStats(); }}
+                className="text-indigo-600 text-sm font-semibold hover:text-indigo-700 hover:underline transition-colors"
+              >
+                Refresh →
+              </button>
+            </div>
           </div>
 
-          <div className="overflow-x-auto">
+          <div id="reports-exportable-view" className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gradient-to-r from-gray-50 to-blue-50 border-b-2 border-indigo-100">
                 <tr>
@@ -204,14 +255,19 @@ export default function ReportsPage() {
                     </td>
                   </tr>
                 ) : (
-                  recentReports.map((report) => (
-                    <tr key={report.id} className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200">
+                  recentReports.map((report) => {
+                    const isLate = isLateReport(report);
+                    return (
+                    <tr key={report.id} className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 ${isLate ? 'bg-red-50/50' : ''}`}>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+                          <div className={`w-10 h-10 ${isLate ? 'bg-gradient-to-br from-red-500 to-rose-600' : 'bg-gradient-to-br from-blue-500 to-indigo-600'} rounded-lg flex items-center justify-center shadow-md`}>
                             <FileText className="text-white w-5 h-5" />
                           </div>
-                          <span className="font-semibold text-gray-900">{report.name}</span>
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-gray-900">{report.name}</span>
+                            {isLate && <span className="text-xs text-red-600 font-bold">Late Submission</span>}
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -251,7 +307,7 @@ export default function ReportsPage() {
                         </div>
                       </td>
                     </tr>
-                  ))
+                  )})
                 )}
               </tbody>
             </table>

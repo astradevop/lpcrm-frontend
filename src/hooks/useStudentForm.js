@@ -14,6 +14,8 @@ export function useStudentForm(studentId = null) {
   const [trainersLoading, setTrainersLoading] = useState(true);
   const [academicBatches, setAcademicBatches] = useState([]);
   const [batchesLoading, setBatchesLoading] = useState(true);
+  const [branches, setBranches] = useState([]);
+  const [branchesLoading, setBranchesLoading] = useState(true);
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -25,10 +27,11 @@ export function useStudentForm(studentId = null) {
     }
   }, [studentId]);
 
-  // Fetch trainers and batches
+  // Fetch trainers, batches, branches
   useEffect(() => {
     fetchTrainers();
     fetchAcademicBatches();
+    fetchBranches();
   }, [accessToken]);
 
   const fetchStudent = async () => {
@@ -110,6 +113,31 @@ export function useStudentForm(studentId = null) {
     }
   };
 
+  const fetchBranches = async () => {
+    try {
+      setBranchesLoading(true);
+      let token = accessToken || await refreshAccessToken();
+      if (!token) return;
+
+      const res = await axios.get(`${API_BASE_URL}/branches/`, {
+        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
+      });
+
+      let branchesData = [];
+      if (res.data.results) {
+        branchesData = res.data.results;
+      } else if (Array.isArray(res.data)) {
+        branchesData = res.data;
+      }
+      setBranches(branchesData);
+    } catch (err) {
+      console.error('Failed to load branches:', err);
+    } finally {
+      setBranchesLoading(false);
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -127,6 +155,9 @@ export function useStudentForm(studentId = null) {
     }
     if (!formData.academic_batch) {
       newErrors.academic_batch = 'Academic Batch is required';
+    }
+    if (!formData.branch) {
+      newErrors.branch = 'Branch is required';
     }
     if (!formData.trainer) {
       newErrors.trainer = 'Trainer is required';
@@ -212,6 +243,8 @@ export function useStudentForm(studentId = null) {
     trainersLoading,
     academicBatches,
     batchesLoading,
+    branches,
+    branchesLoading,
     loading,
     fetchLoading,
     errors,
