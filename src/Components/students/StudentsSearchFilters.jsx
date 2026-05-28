@@ -5,7 +5,6 @@ const StudentsSearchFilters = React.memo(({
   searchTerm,
   setSearchTerm,
   filterCourse,
-  filterCourse,
   setFilterCourse,
   filterBranch,
   setFilterBranch,
