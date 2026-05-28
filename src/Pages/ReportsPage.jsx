@@ -2,7 +2,6 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
 import Navbar from '../Components/layouts/Navbar';
 import Pagination from '../Components/common/Pagination';
 import { Calendar, FileText, Download, FolderOpen, TrendingUp, Clock, CheckCircle, Eye, AlertCircle, XCircle, Paperclip } from 'lucide-react';
