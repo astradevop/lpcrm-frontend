@@ -17,6 +17,7 @@ import {
   XCircle,
   Filter,
   MoreVertical,
+  ShieldAlert,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { downloadCSV, downloadPDF } from '../utils/exportUtils';
@@ -27,7 +28,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function StaffPage() {
   const navigate = useNavigate();
-  const { accessToken, refreshAccessToken, loading: authLoading, isAuthenticated } = useAuth();
+  const { user, accessToken, refreshAccessToken, loading: authLoading, isAuthenticated } = useAuth();
 
   const [staffMembers, setStaffMembers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -454,28 +455,34 @@ export default function StaffPage() {
                     <div className="text-xs text-gray-500 mb-4">Joined: {staff.joinDate}</div>
 
                     <div className="flex gap-2 pt-4 border-t border-gray-200">
-                      <button
-                        onClick={() => navigate(`/staff/edit/${staff.id}`)}
-                        className="flex-1 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 font-medium"
-                      >
-                        <Edit size={16} /> Edit
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSelectedStaffForPerms(staff);
-                          setPermissionsModalOpen(true);
-                        }}
-                        className="px-4 py-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 font-medium"
-                        title="Manage Permissions"
-                      >
-                        <ShieldAlert size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(staff.id)}
-                        className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      {user?.permissions?.includes('edit_staff') && (
+                        <button
+                          onClick={() => navigate(`/staff/edit/${staff.id}`)}
+                          className="flex-1 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 font-medium"
+                        >
+                          <Edit size={16} /> Edit
+                        </button>
+                      )}
+                      {user?.permissions?.includes('edit_staff') && (
+                        <button
+                          onClick={() => {
+                            setSelectedStaffForPerms(staff);
+                            setPermissionsModalOpen(true);
+                          }}
+                          className="px-4 py-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 font-medium"
+                          title="Manage Permissions"
+                        >
+                          <ShieldAlert size={16} />
+                        </button>
+                      )}
+                      {user?.permissions?.includes('delete_staff') && (
+                        <button
+                          onClick={() => handleDelete(staff.id)}
+                          className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
