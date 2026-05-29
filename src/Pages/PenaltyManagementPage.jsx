@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../Components/layouts/Navbar';
+import CompanySwitcher from '../Components/common/CompanySwitcher';
 import {
   DollarSign,
   Plus,
@@ -344,8 +345,10 @@ export default function PenaltyManagementPage() {
                 Track and manage employee penalties
               </p>
             </div>
-            {canManagePenalties && (
-              <button
+            <div className="flex items-center gap-4">
+              <CompanySwitcher />
+              {canManagePenalties && (
+                <button
                 onClick={() => {
                   setEditingPenalty(null);
                   setFormData({
@@ -363,6 +366,7 @@ export default function PenaltyManagementPage() {
                 Add Penalty
               </button>
             )}
+            </div>
           </div>
         </div>
 

@@ -49,6 +49,9 @@ export default function StaffPermissionsModal({ isOpen, onClose, staffId, curren
     try {
       const res = await authFetch(`${apiBaseUrl}/staff/${staffId}/update/`, {
         method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ permissions }),
       });
 

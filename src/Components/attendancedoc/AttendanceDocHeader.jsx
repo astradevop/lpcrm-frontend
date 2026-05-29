@@ -1,6 +1,7 @@
 import React from 'react';
 import { Plus } from 'lucide-react';
 import Button from '../common/Button';
+import CompanySwitcher from '../common/CompanySwitcher';
 
 export default function AttendanceDocHeader({ onUploadClick }) {
   return (
@@ -14,14 +15,17 @@ export default function AttendanceDocHeader({ onUploadClick }) {
             Upload and manage monthly attendance records
           </p>
         </div>
-        <Button
-          onClick={onUploadClick}
-          variant="primary"
-          icon={Plus}
-          className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-        >
-          Upload Document
-        </Button>
+        <div className="flex items-center gap-4">
+          <CompanySwitcher />
+          <Button
+            onClick={onUploadClick}
+            variant="primary"
+            icon={Plus}
+            className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+          >
+            Upload Document
+          </Button>
+        </div>
       </div>
     </div>
   );

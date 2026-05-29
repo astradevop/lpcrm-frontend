@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Navbar from '../Components/layouts/Navbar';
+import CompanySwitcher from '../Components/common/CompanySwitcher';
 import { 
   FileText, Plus, Send, X, Calendar, User, Clock,
   CheckCircle2, XCircle, AlertCircle, Download, Eye,
@@ -488,12 +489,15 @@ export default function MyReportsPage() {
               </h1>
               <p className="text-gray-600 text-lg">Submit and track your daily work reports</p>
             </div>
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"
-            >
-              <Plus className="w-5 h-5" /> New Report
-            </button>
+            <div className="flex items-center gap-4">
+              <CompanySwitcher />
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"
+              >
+                <Plus className="w-5 h-5" /> New Report
+              </button>
+            </div>
           </div>
         </div>
 

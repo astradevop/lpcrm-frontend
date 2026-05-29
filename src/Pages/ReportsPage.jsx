@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../Components/layouts/Navbar';
+import CompanySwitcher from '../Components/common/CompanySwitcher';
 import Pagination from '../Components/common/Pagination';
 import { Calendar, FileText, Download, FolderOpen, TrendingUp, Clock, CheckCircle, Eye, AlertCircle, XCircle, Paperclip } from 'lucide-react';
 import { downloadCSV, downloadPDF } from '../utils/exportUtils';
@@ -163,10 +164,15 @@ export default function ReportsPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
-            Reports & Analytics
-          </h1>
-          <p className="text-gray-600 text-lg">Review and manage all submitted reports</p>
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <h1 className="text-4xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                Reports & Analytics
+              </h1>
+              <p className="text-gray-600 text-lg">Review and manage all submitted reports</p>
+            </div>
+            <CompanySwitcher />
+          </div>
         </div>
 
         {/* Stats Cards */}

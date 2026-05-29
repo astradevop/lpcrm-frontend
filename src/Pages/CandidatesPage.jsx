@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 
 import Navbar from '../Components/layouts/Navbar';
+import CompanySwitcher from '../Components/common/CompanySwitcher';
 import { useAuth } from '../context/AuthContext';
 
 const CANDIDATE_ASSIGNER_ROLES = ['ADMIN', 'HR'];
@@ -221,15 +222,18 @@ export default function CandidatesPage() {
               </h1>
               <p className="text-gray-600 text-lg">Track and manage your hiring pipeline</p>
             </div>
-            {canManage && (
-              <button
-                onClick={() => navigate('/candidates/new')}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
-              >
-                <Plus size={20} />
-                Add Candidate
-              </button>
-            )}
+            <div className="flex items-center gap-4">
+              <CompanySwitcher />
+              {canManage && (
+                <button
+                  onClick={() => navigate('/candidates/new')}
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2"
+                >
+                  <Plus size={20} />
+                  Add Candidate
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
