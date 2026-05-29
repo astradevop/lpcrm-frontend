@@ -18,6 +18,7 @@ const PERMISSION_OPTIONS = [
   { id: 'view_candidates', label: 'View Candidates', group: 'HR' },
   { id: 'edit_candidates', label: 'Manage Candidates', group: 'HR' },
   { id: 'mark_attendance', label: 'Mark Student Attendance', group: 'Trainer' },
+  { id: 'access_flag', label: 'Cross-Company Access (FLAG)', group: 'System' },
 ];
 
 export default function StaffPermissionsModal({ isOpen, onClose, staffId, currentPermissions, onSave, authFetch, apiBaseUrl }) {
