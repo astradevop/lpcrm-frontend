@@ -3,7 +3,7 @@ import { Plus } from 'lucide-react';
 import Button from '../common/Button';
 import CompanySwitcher from '../common/CompanySwitcher';
 
-export default function AttendanceDocHeader({ onUploadClick }) {
+export default function AttendanceDocHeader({ onUploadClick, companyFilter, setCompanyFilter }) {
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between flex-wrap gap-4">
@@ -16,7 +16,7 @@ export default function AttendanceDocHeader({ onUploadClick }) {
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <CompanySwitcher />
+          <CompanySwitcher activeCompany={companyFilter} onChange={setCompanyFilter} />
           <Button
             onClick={onUploadClick}
             variant="primary"

@@ -61,6 +61,7 @@ export default function CandidatesPage() {
 
   const [searchTerm,    setSearchTerm]    = useState('');
   const [filterStatus,  setFilterStatus]  = useState('all');
+  const [companyFilter, setCompanyFilter] = useState('');
 
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(null);
@@ -131,6 +132,7 @@ export default function CandidatesPage() {
 
       const token  = await getToken();
       const params = new URLSearchParams({ page });
+      if (companyFilter)            params.set('company', companyFilter);
       if (searchTerm)               params.set('search', searchTerm);
       if (filterStatus !== 'all')   params.set('status', filterStatus);
 
@@ -149,10 +151,10 @@ export default function CandidatesPage() {
     } finally {
       setLoading(false);
     }
-  }, [API_BASE_URL, getToken, page, searchTerm, filterStatus]);
+  }, [API_BASE_URL, getToken, page, searchTerm, filterStatus, companyFilter]);
 
   // Reset to page 1 when filters change
-  useEffect(() => { setPage(1); }, [searchTerm, filterStatus]);
+  useEffect(() => { setPage(1); }, [searchTerm, filterStatus, companyFilter]);
 
   useEffect(() => {
     fetchCandidates();
@@ -223,7 +225,7 @@ export default function CandidatesPage() {
               <p className="text-gray-600 text-lg">Track and manage your hiring pipeline</p>
             </div>
             <div className="flex items-center gap-4">
-              <CompanySwitcher />
+              <CompanySwitcher activeCompany={companyFilter} onChange={setCompanyFilter} />
               {canManage && (
                 <button
                   onClick={() => navigate('/candidates/new')}

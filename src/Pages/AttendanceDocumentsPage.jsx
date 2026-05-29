@@ -20,6 +20,7 @@ export default function AttendanceDocumentsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [companyFilter, setCompanyFilter] = useState('');
 
   const fetchWithAuth = async (url, options = {}) => {
     try {
@@ -67,7 +68,9 @@ export default function AttendanceDocumentsPage() {
   const fetchDocuments = async () => {
     try {
       setLoading(true);
-      const data = await fetchWithAuth(`${API_BASE_URL}/attendance/`);
+      const params = new URLSearchParams();
+      if (companyFilter) params.set('company', companyFilter);
+      const data = await fetchWithAuth(`${API_BASE_URL}/attendance/?${params}`);
       setDocuments(data.results || data || []);
     } catch (err) {
       console.error('Error fetching documents:', err);
@@ -80,7 +83,7 @@ export default function AttendanceDocumentsPage() {
     if (accessToken) {
       fetchDocuments();
     }
-  }, [accessToken]);
+  }, [accessToken, companyFilter]);
 
   // Handle document deletion
   const handleDelete = async (id) => {
@@ -120,7 +123,11 @@ export default function AttendanceDocumentsPage() {
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <AttendanceHeader onUploadClick={() => setShowUploadModal(true)} />
+        <AttendanceHeader 
+          onUploadClick={() => setShowUploadModal(true)} 
+          companyFilter={companyFilter} 
+          setCompanyFilter={setCompanyFilter} 
+        />
 
         {/* Filters */}
         <AttendanceFilters

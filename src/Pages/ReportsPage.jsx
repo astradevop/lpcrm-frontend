@@ -19,6 +19,7 @@ export default function ReportsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [companyFilter, setCompanyFilter] = useState('');
 
   const PAGE_SIZE = 50;
   const API_BASE = import.meta.env.VITE_API_BASE_URL;
@@ -27,6 +28,7 @@ export default function ReportsPage() {
     if (!accessToken) return;
     try {
       const res = await axios.get(`${API_BASE}/admin/reports/stats/`, {
+        params: companyFilter ? { company: companyFilter } : {},
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       setStatsData(res.data);
@@ -39,8 +41,10 @@ export default function ReportsPage() {
     if (!accessToken) return;
     setLoading(true);
     try {
+      const params = { page: pageNumber, page_size: PAGE_SIZE };
+      if (companyFilter) params.company = companyFilter;
       const res = await axios.get(`${API_BASE}/admin/reports/`, {
-        params: { page: pageNumber, page_size: PAGE_SIZE },
+        params,
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
@@ -56,11 +60,11 @@ export default function ReportsPage() {
 
   useEffect(() => {
     fetchStats();
-  }, [accessToken]);
+  }, [accessToken, companyFilter]);
 
   useEffect(() => {
     fetchReports(page);
-  }, [accessToken, page]);
+  }, [accessToken, page, companyFilter]);
 
 
   // ── Download via Django proxy ─────────────────────────────────────────────
@@ -171,7 +175,7 @@ export default function ReportsPage() {
               </h1>
               <p className="text-gray-600 text-lg">Review and manage all submitted reports</p>
             </div>
-            <CompanySwitcher />
+            <CompanySwitcher activeCompany={companyFilter} onChange={setCompanyFilter} />
           </div>
         </div>
 

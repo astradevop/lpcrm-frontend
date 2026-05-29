@@ -142,6 +142,7 @@ export default function MyReportsPage() {
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [editingReport, setEditingReport] = useState(null);
+  const [companyFilter, setCompanyFilter] = useState('');
   
   const [formData, setFormData] = useState({
     name: user?.name || user?.username || '',
@@ -247,7 +248,9 @@ export default function MyReportsPage() {
   const fetchReports = async () => {
     try {
       setLoading(true);
-      const data = await fetchWithAuth(`${API_BASE_URL}/reports/my/`);
+      const params = new URLSearchParams();
+      if (companyFilter) params.set('company', companyFilter);
+      const data = await fetchWithAuth(`${API_BASE_URL}/reports/my/?${params}`);
       setReports(data.results || data || []);
     } catch (err) {
       console.error('Error fetching reports:', err);
@@ -258,7 +261,7 @@ export default function MyReportsPage() {
 
   useEffect(() => {
     if (accessToken) fetchReports();
-  }, [accessToken]);
+  }, [accessToken, companyFilter]);
 
   const handleInputChange = async (e) => {
     const { name, value } = e.target;
@@ -490,7 +493,7 @@ export default function MyReportsPage() {
               <p className="text-gray-600 text-lg">Submit and track your daily work reports</p>
             </div>
             <div className="flex items-center gap-4">
-              <CompanySwitcher />
+              <CompanySwitcher activeCompany={companyFilter} onChange={setCompanyFilter} />
               <button
                 onClick={() => setShowCreateModal(true)}
                 className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all"

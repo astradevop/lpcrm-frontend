@@ -33,6 +33,7 @@ export default function PenaltyManagementPage() {
   const [selectedMonth, setSelectedMonth] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [companyFilter, setCompanyFilter] = useState('');
 
   const [formData, setFormData] = useState({
     user: '',
@@ -141,7 +142,9 @@ export default function PenaltyManagementPage() {
   const fetchPenalties = async () => {
     try {
       setLoading(true);
-      const data = await fetchWithAuth(`${API_BASE_URL}/penalties/`);
+      const params = new URLSearchParams();
+      if (companyFilter) params.set('company', companyFilter);
+      const data = await fetchWithAuth(`${API_BASE_URL}/penalties/?${params}`);
       console.log('Fetched penalties:', data);
       setPenalties(data.results || data || []);
     } catch (err) {
@@ -154,10 +157,10 @@ export default function PenaltyManagementPage() {
 
   useEffect(() => {
     if (accessToken) {
-      fetchEmployees();
       fetchPenalties();
+      fetchEmployees();
     }
-  }, [accessToken]);
+  }, [accessToken, companyFilter]);
 
   // Calculate total penalty for filtered month
   const calculateTotalPenalty = () => {
@@ -346,7 +349,7 @@ export default function PenaltyManagementPage() {
               </p>
             </div>
             <div className="flex items-center gap-4">
-              <CompanySwitcher />
+              <CompanySwitcher activeCompany={companyFilter} onChange={setCompanyFilter} />
               {canManagePenalties && (
                 <button
                 onClick={() => {
