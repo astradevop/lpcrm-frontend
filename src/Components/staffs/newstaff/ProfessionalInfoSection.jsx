@@ -1,10 +1,10 @@
 import React from 'react';
-import { Briefcase, Shield, Users, DollarSign, MapPin } from 'lucide-react';
+import { Briefcase, Shield, Users, DollarSign, MapPin, Building } from 'lucide-react';
 import FormField from '../../common/FormField';
 import IconContainer from '../../common/IconContainer';
 import { roleOptions, teamOptions } from '../../utils/staffConstants';
 
-const ProfessionalInfoSection = React.memo(({ formData, errors, onChange, branches = [] }) => {
+const ProfessionalInfoSection = React.memo(({ formData, errors, onChange, branches = [], hasDualAccess = false }) => {
   return (
     <div className="mb-6 sm:mb-8 pt-6 sm:pt-8 border-t border-gray-200">
       {/* Section Header */}
@@ -73,6 +73,23 @@ const ProfessionalInfoSection = React.memo(({ formData, errors, onChange, branch
             placeholder="Select a branch"
             icon={MapPin}
             options={branches.map(branch => ({ value: branch.id, label: branch.name }))}
+            className="px-4 py-3 border-2 rounded-xl font-medium"
+          />
+        )}
+
+        {hasDualAccess && (
+          <FormField
+            label="Company"
+            name="company"
+            type="select"
+            value={formData.company || ''}
+            onChange={onChange}
+            placeholder="Select a company"
+            icon={Building}
+            options={[
+              { value: 'LP', label: 'LP Group' },
+              { value: 'FLAG', label: 'FLAG' }
+            ]}
             className="px-4 py-3 border-2 rounded-xl font-medium"
           />
         )}

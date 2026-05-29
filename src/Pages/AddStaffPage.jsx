@@ -11,8 +11,10 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function AddStaffPage() {
-  const { accessToken } = useAuth();
+  const { accessToken, user } = useAuth();
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+  const hasDualAccess = user?.permissions?.includes('access_flag');
 
   const [formData, setFormData] = useState(initialFormData);
   const [submitted, setSubmitted] = useState(false);
@@ -94,6 +96,7 @@ export default function AddStaffPage() {
       salary: formData.salary ? parseFloat(formData.salary) : null,
       password: formData.password,
       branch_id: formData.branch || null,
+      company: formData.company || user?.company || 'LP',
     };
 
 
@@ -196,6 +199,7 @@ export default function AddStaffPage() {
             errors={errors}
             onChange={handleInputChange}
             branches={branches}
+            hasDualAccess={hasDualAccess}
           />
 
           <SecuritySection

@@ -5,7 +5,7 @@ import EditStaffForm from "../Components/staffs/editstaff/EditStaffForm";
 
 export default function EditStaffPage() {
   const { id } = useParams();
-  const { accessToken, refreshAccessToken } = useAuth();
+  const { accessToken, refreshAccessToken, user } = useAuth();
   const navigate = useNavigate();
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -19,7 +19,8 @@ export default function EditStaffPage() {
     role: '',
     team: '',
     salary: '',
-    isActive: true
+    isActive: true,
+    company: 'LP',
   });
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState('');
@@ -80,7 +81,8 @@ export default function EditStaffPage() {
           role: data.role || '',
           salary: data.salary || '',
           team: data.team || '',
-          isActive: data.is_active ?? true
+          isActive: data.is_active ?? true,
+          company: data.company || 'LP'
         });
       } catch (err) {
         setFetchError('Network error occurred');
@@ -125,6 +127,7 @@ export default function EditStaffPage() {
       authFetch={authFetch}
       apiBaseUrl={API_BASE_URL}
       navigate={navigate}
+      hasDualAccess={user?.permissions?.includes('access_flag')}
     />
   );
 }

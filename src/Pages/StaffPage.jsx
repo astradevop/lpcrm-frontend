@@ -23,6 +23,7 @@ import { useAuth } from '../context/AuthContext';
 import { downloadCSV, downloadPDF } from '../utils/exportUtils';
 import Pagination from '../Components/common/Pagination';
 import StaffPermissionsModal from '../Components/staffs/StaffPermissionsModal';
+import CompanySwitcher from '../Components/common/CompanySwitcher';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -35,6 +36,7 @@ export default function StaffPage() {
   const [filterDepartment, setFilterDepartment] = useState('all');
   const [filterBranch, setFilterBranch] = useState('all');
   const [filterStatus, setFilterStatus] = useState('active'); // active, inactive, all
+  const [companyFilter, setCompanyFilter] = useState('');
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({
@@ -80,7 +82,7 @@ export default function StaffPage() {
   );
 
   const fetchStaff = useCallback(
-    async (page = 1, search = '', team = '', branch = '', status = 'active') => {
+    async (page = 1, search = '', team = '', branch = '', status = 'active', company = '') => {
       if (!accessToken) return;
 
       setLoading(true);
@@ -90,6 +92,7 @@ export default function StaffPage() {
         if (team && team !== 'all') queryParams.append('team', team);
         if (branch && branch !== 'all') queryParams.append('branch_id', branch);
         if (status && status !== 'all') queryParams.append('status', status);
+        if (company) queryParams.append('company', company);
         queryParams.append('page', page);
         queryParams.append('page_size', '50'); // Request 50 items per page
 
@@ -156,19 +159,19 @@ export default function StaffPage() {
     };
     fetchBranches();
 
-    fetchStaff(1, searchTerm, filterDepartment, filterBranch, filterStatus);
-  }, [authLoading, accessToken, filterDepartment, filterBranch, filterStatus]);
+    fetchStaff(1, searchTerm, filterDepartment, filterBranch, filterStatus, companyFilter);
+  }, [authLoading, accessToken, filterDepartment, filterBranch, filterStatus, companyFilter]);
 
   // Search debounce
   useEffect(() => {
     const timer = setTimeout(() => {
       if (!authLoading && accessToken) {
-        fetchStaff(1, searchTerm, filterDepartment, filterBranch, filterStatus);
+        fetchStaff(1, searchTerm, filterDepartment, filterBranch, filterStatus, companyFilter);
       }
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchTerm, filterDepartment, filterBranch, filterStatus, accessToken, authLoading]);
+  }, [searchTerm, filterDepartment, filterBranch, filterStatus, companyFilter, accessToken, authLoading]);
 
   // Delete staff member
   const handleDelete = async (staffId) => {
@@ -179,7 +182,7 @@ export default function StaffPage() {
         method: 'DELETE',
       });
 
-      fetchStaff(pagination.currentPage, searchTerm, filterDepartment, filterBranch, filterStatus);
+      fetchStaff(pagination.currentPage, searchTerm, filterDepartment, filterBranch, filterStatus, companyFilter);
       alert('Staff member deleted successfully');
     } catch (err) {
       console.error('Failed to delete staff:', err);
@@ -208,7 +211,7 @@ export default function StaffPage() {
 
   // Pagination handlers
   const handlePageClick = (page) => {
-    fetchStaff(page, searchTerm, filterDepartment, filterBranch, filterStatus);
+    fetchStaff(page, searchTerm, filterDepartment, filterBranch, filterStatus, companyFilter);
   };
 
   // Helper function to get gradient color based on name
@@ -285,6 +288,9 @@ export default function StaffPage() {
             </div>
           </div>
         </div>
+
+        {/* Company Switcher */}
+        <CompanySwitcher activeCompany={companyFilter} onChange={setCompanyFilter} />
 
         {/* Modern Stats Cards with Gradient */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
@@ -512,7 +518,7 @@ export default function StaffPage() {
         onSave={(newPerms) => {
           setPermissionsModalOpen(false);
           // Refresh staff list to get updated permissions
-          fetchStaff(pagination.currentPage, searchTerm, filterDepartment, filterBranch, filterStatus);
+          fetchStaff(pagination.currentPage, searchTerm, filterDepartment, filterBranch, filterStatus, companyFilter);
         }}
       />
     </div>

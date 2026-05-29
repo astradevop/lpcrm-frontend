@@ -5,12 +5,15 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import TaskFormFields from '../Components/tasks/TaskFormFields';
 import PrioritySelector from '../Components/tasks/PrioritySelector';
+import { Building } from 'lucide-react';
 
 export default function TaskCreationPage() {
   const navigate = useNavigate();
-  const { accessToken, refreshAccessToken } = useAuth();
+  const { accessToken, refreshAccessToken, user } = useAuth();
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   
+  const hasDualAccess = user?.permissions?.includes('access_flag');
+
   const [teamMembers, setTeamMembers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -25,6 +28,7 @@ export default function TaskCreationPage() {
     assignTo: '',
     priority: 'MEDIUM',
     deadline: '',
+    company: user?.company || 'LP',
   });
 
   // Fetch team members
@@ -40,7 +44,8 @@ export default function TaskCreationPage() {
           }
         }
 
-        const res = await fetch(`${API_BASE_URL}/employees/list/`, {
+        const url = formData.company ? `${API_BASE_URL}/employees/list/?company=${formData.company}` : `${API_BASE_URL}/employees/list/`;
+        const res = await fetch(url, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -73,7 +78,7 @@ export default function TaskCreationPage() {
     };
 
     fetchTeamMembers();
-  }, [accessToken, refreshAccessToken, API_BASE_URL]);
+  }, [accessToken, refreshAccessToken, API_BASE_URL, formData.company]);
 
   // Validate form
   const validateForm = () => {
@@ -134,6 +139,7 @@ export default function TaskCreationPage() {
         assigned_to: parseInt(formData.assignTo, 10),
         priority: formData.priority,
         deadline: formData.deadline,
+        company: formData.company,
       };
 
       const res = await fetch(`${API_BASE_URL}/tasks/`, {
@@ -171,6 +177,7 @@ export default function TaskCreationPage() {
         assignTo: '',
         priority: 'MEDIUM',
         deadline: '',
+        company: user?.company || 'LP',
       });
       setErrors({});
 
@@ -192,6 +199,7 @@ export default function TaskCreationPage() {
       assignTo: '',
       priority: 'MEDIUM',
       deadline: '',
+      company: user?.company || 'LP',
     });
     setErrors({});
   };
@@ -227,6 +235,24 @@ export default function TaskCreationPage() {
         <form onSubmit={handleSubmit}>
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
             <div className="p-8 space-y-8">
+              {hasDualAccess && (
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                    <Building size={16} className="text-indigo-500" />
+                    Company
+                  </label>
+                  <select
+                    value={formData.company}
+                    onChange={(e) => handleFieldChange('company', e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none"
+                    disabled={loading}
+                  >
+                    <option value="LP">LP Group</option>
+                    <option value="FLAG">FLAG</option>
+                  </select>
+                </div>
+              )}
+
               {/* Task Form Fields */}
               <TaskFormFields
                 formData={formData}

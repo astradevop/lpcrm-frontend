@@ -7,6 +7,7 @@ import LeadsTable from '../Components/leads/LeadsTable';
 import { Users, UserPlus, CheckCircle, TrendingUp } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import Pagination from '../Components/common/Pagination';
+import CompanySwitcher from '../Components/common/CompanySwitcher';
 
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -60,6 +61,7 @@ export default function LeadsPage() {
   const [filterPriority, setFilterPriority]   = useState('all');
   const [filterSource, setFilterSource]       = useState('all');
   const [filterStaff, setFilterStaff]         = useState('all');
+  const [companyFilter, setCompanyFilter]     = useState('');
   const [loading, setLoading]                 = useState(false);
   const [initialLoad, setInitialLoad]         = useState(true);
   const [staffMembers, setStaffMembers]       = useState([]);
@@ -140,6 +142,7 @@ export default function LeadsPage() {
       try {
         const paramsObj = { page, page_size: PAGE_SIZE };
 
+        if (companyFilter)            paramsObj.company   = companyFilter;
         if (debouncedSearch)          paramsObj.search    = debouncedSearch;
         if (filterStatus !== 'all')   paramsObj.status    = filterStatus.toUpperCase();
         if (filterPriority !== 'all') paramsObj.priority  = filterPriority.toUpperCase();
@@ -216,7 +219,7 @@ export default function LeadsPage() {
   }, [
     authLoading, accessToken, authFetch,
     page, debouncedSearch,
-    filterStatus, filterPriority, filterSource, filterStaff,
+    filterStatus, filterPriority, filterSource, filterStaff, companyFilter,
   ]);
 
   const statsCards = useMemo(() => [
@@ -240,6 +243,9 @@ export default function LeadsPage() {
       <Navbar />
       <div className="max-w-7xl mx-auto px-4 py-8">
         <LeadsPageHeader />
+
+        {/* Company Switcher */}
+        <CompanySwitcher activeCompany={companyFilter} onChange={setCompanyFilter} />
 
         {/* Stats + filters always visible — no layout jump on load */}
         <LeadsStatsCards stats={statsCards} />

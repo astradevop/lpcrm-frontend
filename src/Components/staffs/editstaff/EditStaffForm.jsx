@@ -7,7 +7,8 @@ export default function EditStaffForm({
   staffId,
   authFetch,
   apiBaseUrl,
-  navigate
+  navigate,
+  hasDualAccess
 }) {
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState({});
@@ -75,6 +76,7 @@ export default function EditStaffForm({
       team: formData.team,
       salary: formData.salary, 
       is_active: formData.isActive,
+      company: formData.company,
     };
 
     try {
@@ -133,6 +135,7 @@ export default function EditStaffForm({
       handleInputChange={handleInputChange}
       handleSubmit={handleSubmit}
       handleBack={handleBack}
+      hasDualAccess={hasDualAccess}
     />
   );
 }

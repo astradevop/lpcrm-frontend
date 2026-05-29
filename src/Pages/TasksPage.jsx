@@ -11,6 +11,7 @@ import Navbar from '../Components/layouts/Navbar';
 import { useAuth } from '../context/AuthContext';
 import KanbanBoard from '../Components/KanbanBoard';
 import { downloadCSV, downloadPDF } from '../utils/exportUtils';
+import CompanySwitcher from '../Components/common/CompanySwitcher';
 
 // Roles that are allowed to create / assign tasks  (mirrors permissions.py)
 const TASK_ASSIGNER_ROLES = ['ADMIN', 'CEO', 'OPS', 'GENERAL_MANAGER', 'CM', 'BDM', 'HR'];
@@ -34,6 +35,7 @@ export default function TasksPage() {
   const [filterPriority,  setFilterPriority]  = useState('all');
   const [filterDate,      setFilterDate]      = useState('all');
   const [filterSpecificDate, setFilterSpecificDate] = useState('');
+  const [companyFilter, setCompanyFilter] = useState('');
 
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(null);
@@ -103,7 +105,8 @@ export default function TasksPage() {
   const fetchStats = useCallback(async () => {
     try {
       const token = await getToken();
-      const res = await fetch(`${API_BASE_URL}/tasks/stats/`, {
+      const url = companyFilter ? `${API_BASE_URL}/tasks/stats/?company=${companyFilter}` : `${API_BASE_URL}/tasks/stats/`;
+      const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       });
       if (!res.ok) throw new Error('Failed to fetch task stats');
@@ -123,6 +126,7 @@ export default function TasksPage() {
 
       // FIX: pass filters as query params → server filters across ALL pages
       const params = new URLSearchParams({ page });
+      if (companyFilter)                        params.set('company', companyFilter);
       if (searchTerm)                           params.set('search',   searchTerm);
       if (filterStatus   && filterStatus   !== 'all') params.set('status',   filterStatus);
       if (filterPriority && filterPriority !== 'all') params.set('priority', filterPriority);
@@ -150,10 +154,10 @@ export default function TasksPage() {
     } finally {
       setLoading(false);
     }
-  }, [API_BASE_URL, getToken, page, searchTerm, filterStatus, filterPriority, filterDate, filterSpecificDate]);
+  }, [API_BASE_URL, getToken, page, searchTerm, filterStatus, filterPriority, filterDate, filterSpecificDate, companyFilter]);
 
   // Reset to page 1 when filters change
-  useEffect(() => { setPage(1); }, [searchTerm, filterStatus, filterPriority, filterDate, filterSpecificDate]);
+  useEffect(() => { setPage(1); }, [searchTerm, filterStatus, filterPriority, filterDate, filterSpecificDate, companyFilter]);
 
   useEffect(() => {
     fetchTasks();
@@ -327,6 +331,9 @@ export default function TasksPage() {
             </div>
           </div>
         </div>
+
+        {/* Company Switcher */}
+        <CompanySwitcher activeCompany={companyFilter} onChange={setCompanyFilter} />
 
         {/* Stats */}
         {stats && (

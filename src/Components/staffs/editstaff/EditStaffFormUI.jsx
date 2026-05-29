@@ -11,7 +11,8 @@ export default function EditStaffFormUI({
   submitted,
   handleInputChange,
   handleSubmit,
-  handleBack
+  handleBack,
+  hasDualAccess
 }) {
   return (
     <div className="min-h-screen bg-gray-50">
@@ -72,6 +73,7 @@ export default function EditStaffFormUI({
             formData={formData}
             errors={errors}
             onChange={handleInputChange}
+            hasDualAccess={hasDualAccess}
           />
 
           <StaffActionButtons
