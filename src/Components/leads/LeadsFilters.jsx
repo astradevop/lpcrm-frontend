@@ -1,5 +1,6 @@
 import React from 'react';
 import { Search, Filter, SlidersHorizontal } from 'lucide-react';
+import { Combobox } from '../common/Combobox';
 
 const LeadsFilters = ({
   searchTerm,
@@ -14,10 +15,47 @@ const LeadsFilters = ({
   setFilterStaff,
   staffMembers,
 }) => {
+  const statusOptions = [
+    { id: 'all', label: 'All Status' },
+    { id: 'enquiry', label: 'Enquiry' },
+    { id: 'contacted', label: 'Contacted' },
+    { id: 'qualified', label: 'Qualified' },
+    { id: 'converted', label: 'Converted' },
+    { id: 'registered', label: 'Registered' },
+    { id: 'lost', label: 'Lost' },
+  ];
+
+  const priorityOptions = [
+    { id: 'all', label: 'All Priorities' },
+    { id: 'high', label: 'High Priority' },
+    { id: 'medium', label: 'Medium Priority' },
+    { id: 'low', label: 'Low Priority' },
+  ];
+
+  const sourceOptions = [
+    { id: 'all', label: 'All Sources' },
+    { id: 'whatsapp', label: 'WhatsApp' },
+    { id: 'instagram', label: 'Instagram' },
+    { id: 'website', label: 'Website' },
+    { id: 'walk_in', label: 'Walk-in' },
+    { id: 'automation', label: 'Automation' },
+    { id: 'ads', label: 'Ads' },
+    { id: 'voxbay call', label: 'Voxbay' },
+    { id: 'bulk data', label: 'Bulk Data' },
+    { id: 'other', label: 'Other' },
+  ];
+
+  const staffOptions = [
+    { id: 'all', label: 'All Staff' },
+    ...(staffMembers || []).map((staff) => ({
+      id: staff.id,
+      label: staff.username || `${staff.first_name || ''} ${staff.last_name || ''}`.trim() || `Staff #${staff.id}`,
+    })),
+  ];
+
   return (
     <div className="bg-white rounded-2xl p-6 mb-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
       <div className="space-y-4">
-
         {/* Search Bar */}
         <div className="relative group">
           <Search
@@ -35,78 +73,37 @@ const LeadsFilters = ({
 
         {/* Filter Row */}
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-
           {/* Status Filter */}
-          <div className="relative">
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="appearance-none w-full px-4 py-3 pr-10 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all cursor-pointer font-semibold text-gray-700 bg-white hover:bg-gray-50"
-            >
-              <option value="all">All Status</option>
-              <option value="enquiry">Enquiry</option>
-              <option value="contacted">Contacted</option>
-              <option value="qualified">Qualified</option>
-              <option value="converted">Converted</option>
-              <option value="registered">Registered</option>
-              <option value="lost">Lost</option>
-            </select>
-            <SlidersHorizontal className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
-          </div>
+          <Combobox
+            options={statusOptions}
+            value={statusOptions.find((o) => o.id === filterStatus) || statusOptions[0]}
+            onChange={(opt) => setFilterStatus(opt.id)}
+            displayValue={(opt) => opt?.label || 'Select Status'}
+          />
 
           {/* Priority Filter */}
-          <div className="relative">
-            <select
-              value={filterPriority}
-              onChange={(e) => setFilterPriority(e.target.value)}
-              className="appearance-none w-full px-4 py-3 pr-10 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all cursor-pointer font-semibold text-gray-700 bg-white hover:bg-gray-50"
-            >
-              <option value="all">All Priorities</option>
-              <option value="high">High Priority</option>
-              <option value="medium">Medium Priority</option>
-              <option value="low">Low Priority</option>
-            </select>
-            <SlidersHorizontal className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
-          </div>
+          <Combobox
+            options={priorityOptions}
+            value={priorityOptions.find((o) => o.id === filterPriority) || priorityOptions[0]}
+            onChange={(opt) => setFilterPriority(opt.id)}
+            displayValue={(opt) => opt?.label || 'Select Priority'}
+          />
 
           {/* Source Filter */}
-          <div className="relative">
-            <select
-              value={filterSource}
-              onChange={(e) => setFilterSource(e.target.value)}
-              className="appearance-none w-full px-4 py-3 pr-10 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all cursor-pointer font-semibold text-gray-700 bg-white hover:bg-gray-50"
-            >
-              <option value="all">All Sources</option>
-              <option value="whatsapp">WhatsApp</option>
-              <option value="instagram">Instagram</option>
-              <option value="website">Website</option>
-              <option value="walk_in">Walk-in</option>
-              <option value="automation">Automation</option>
-              <option value="ads">Ads</option>
-              <option value="voxbay call">Voxbay</option>
-              <option value="bulk data">Bulk Data</option>
-              <option value="other">Other</option>
-            </select>
-            <SlidersHorizontal className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
-          </div>
+          <Combobox
+            options={sourceOptions}
+            value={sourceOptions.find((o) => o.id === filterSource) || sourceOptions[0]}
+            onChange={(opt) => setFilterSource(opt.id)}
+            displayValue={(opt) => opt?.label || 'Select Source'}
+          />
 
-          {/* Staff Filter - Now showing username */}
-          <div className="relative">
-            <select
-              value={filterStaff}
-              onChange={(e) => setFilterStaff(e.target.value)}
-              className="appearance-none w-full px-4 py-3 pr-10 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all cursor-pointer font-semibold text-gray-700 bg-white hover:bg-gray-50"
-            >
-              <option value="all">All Staff</option>
-              {staffMembers && staffMembers.map((staff) => (
-                <option key={staff.id} value={staff.id}>
-                  {/* Show username if available, otherwise fallback to first_name last_name */}
-                  {staff.username || `${staff.first_name || ''} ${staff.last_name || ''}`.trim() || `Staff #${staff.id}`}
-                </option>
-              ))}
-            </select>
-            <SlidersHorizontal className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
-          </div>
+          {/* Staff Filter */}
+          <Combobox
+            options={staffOptions}
+            value={staffOptions.find((o) => String(o.id) === String(filterStaff)) || staffOptions[0]}
+            onChange={(opt) => setFilterStaff(opt.id)}
+            displayValue={(opt) => opt?.label || 'Select Staff'}
+          />
 
           {/* Clear Filters */}
           <button
@@ -117,10 +114,10 @@ const LeadsFilters = ({
               setFilterSource('all');
               setFilterStaff('all');
             }}
-            className="px-4 py-3 border-2 border-gray-200 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-orange-50 hover:border-red-300 flex items-center justify-center gap-2 transition-all duration-200 font-semibold text-gray-700 hover:text-red-700 group"
+            className="px-4 py-3 h-[46px] border-2 border-gray-200 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-orange-50 hover:border-red-300 flex items-center justify-center gap-2 transition-all duration-200 font-semibold text-gray-700 hover:text-red-700 group mt-[2px]"
           >
             <Filter size={20} className="group-hover:rotate-12 transition-transform" />
-            Clear Filters
+            Clear
           </button>
         </div>
       </div>

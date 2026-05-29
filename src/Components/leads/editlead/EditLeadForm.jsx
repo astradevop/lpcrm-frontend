@@ -130,9 +130,15 @@ export default function EditLeadForm({
       if (assignmentChanged) {
         if (currentAssignedTo !== null) {
           // Assign to the newly selected user
+          // Prompt for cascading assignment
+          const shouldCascade = window.confirm(
+            'Do you want to cascade this assignment to all active processing tasks for this lead?'
+          );
+
           const assignPayload = {
             lead_id: parseInt(leadId),
-            assigned_to_id: currentAssignedTo
+            assigned_to_id: currentAssignedTo,
+            cascade: shouldCascade
           };
 
           const assignRes = await authFetch(`${apiBaseUrl}/leads/assign/`, {

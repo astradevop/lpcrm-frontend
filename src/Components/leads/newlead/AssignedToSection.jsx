@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { UserCheck, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
+import { Combobox } from '../../common/Combobox';
 
 const AssignedToSection = ({ formData, errors, onChange }) => {
   const [availableUsers, setAvailableUsers] = useState([]);
@@ -45,7 +46,6 @@ const AssignedToSection = ({ formData, errors, onChange }) => {
   const filterUsersByRole = (users, userRole) => {
     if (!userRole) return users;
 
-
     if (userRole === 'ADM_MANAGER') {
       return users.filter(u => 
         u.role === 'ADM_MANAGER' || 
@@ -62,7 +62,6 @@ const AssignedToSection = ({ formData, errors, onChange }) => {
     return users;
   };
 
-
   const getRoleDisplayName = (role) => {
     const roleMap = {
       'ADMIN': 'General Manager',
@@ -77,6 +76,11 @@ const AssignedToSection = ({ formData, errors, onChange }) => {
     return roleMap[role] || role;
   };
 
+  const staffOptions = availableUsers.map(staff => ({
+    id: staff.id,
+    label: `${staff.first_name} ${staff.last_name} - ${getRoleDisplayName(staff.role)}`,
+  }));
+
   return (
     <div className="mb-8">
       <div className="flex items-center gap-2 mb-6">
@@ -87,40 +91,17 @@ const AssignedToSection = ({ formData, errors, onChange }) => {
       </div>
 
       <div className="grid grid-cols-1 gap-6">
-        {/* Assigned To Dropdown */}
+        {/* Assigned To Combobox */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
-            Assign To <span className="text-red-500">*</span>
-          </label>
-          <select
-            name="assignedTo"
-            value={formData.assignedTo}
-            onChange={onChange}
-            disabled={loading}
-            required
-            className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-4 transition-all ${
-              errors.assignedTo
-                ? 'border-red-300 focus:border-red-500 focus:ring-red-100'
-                : 'border-gray-200 focus:border-blue-500 focus:ring-blue-100'
-            } ${loading ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}`}
-          >
-            <option value="">
-              {loading ? 'Loading users...' : 'Select a staff member'}
-            </option>
-            
-            {availableUsers.map((staff) => (
-              <option key={staff.id} value={staff.id}>
-                {staff.first_name} {staff.last_name} - {getRoleDisplayName(staff.role)}
-              </option>
-            ))}
-          </select>
-
-          {errors.assignedTo && (
-            <div className="mt-2 flex items-center gap-2 text-red-600 text-sm">
-              <AlertCircle size={16} />
-              <span>{errors.assignedTo}</span>
-            </div>
-          )}
+          <Combobox
+            label={<>Assign To <span className="text-red-500">*</span></>}
+            options={staffOptions}
+            value={staffOptions.find((o) => String(o.id) === String(formData.assignedTo)) || null}
+            onChange={(opt) => onChange({ target: { name: 'assignedTo', value: opt ? opt.id : '' } })}
+            placeholder={loading ? 'Loading users...' : 'Select a staff member'}
+            displayValue={(opt) => opt?.label || ''}
+            error={errors.assignedTo}
+          />
 
           {!loading && availableUsers.length === 0 && (
             <p className="mt-2 text-sm text-red-600 flex items-start gap-2">

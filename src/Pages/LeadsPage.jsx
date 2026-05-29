@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../Components/layouts/Navbar';
 import LeadsPageHeader from '../Components/leads/LeadsPageHeader';
 import LeadsStatsCards from '../Components/leads/LeadsStatsCards';
 import LeadsFilters from '../Components/leads/LeadsFilters';
 import LeadsTable from '../Components/leads/LeadsTable';
-import { Users, UserPlus, CheckCircle, TrendingUp } from 'lucide-react';
+import LeadsKanbanBoard from '../Components/leads/LeadsKanbanBoard';
+import { Users, UserPlus, CheckCircle, TrendingUp, LayoutList, LayoutGrid } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import Pagination from '../Components/common/Pagination';
 import CompanySwitcher from '../Components/common/CompanySwitcher';
@@ -46,6 +48,7 @@ const TableSkeleton = () => (
 );
 
 export default function LeadsPage() {
+  const navigate = useNavigate();
   const { accessToken, refreshAccessToken, loading: authLoading, user } = useAuth();
 
   const userRole = user?.role || user?.user_role || '';
@@ -62,6 +65,7 @@ export default function LeadsPage() {
   const [filterSource, setFilterSource]       = useState('all');
   const [filterStaff, setFilterStaff]         = useState('all');
   const [companyFilter, setCompanyFilter]     = useState('');
+  const [viewMode, setViewMode]               = useState('list'); // 'list' | 'kanban'
   const [loading, setLoading]                 = useState(false);
   const [initialLoad, setInitialLoad]         = useState(true);
   const [staffMembers, setStaffMembers]       = useState([]);
@@ -244,8 +248,35 @@ export default function LeadsPage() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <LeadsPageHeader />
 
-        {/* Company Switcher */}
-        <CompanySwitcher activeCompany={companyFilter} onChange={setCompanyFilter} />
+        {/* Company Switcher & View Toggle */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+          <CompanySwitcher activeCompany={companyFilter} onChange={setCompanyFilter} />
+          
+          <div className="flex items-center bg-white border-2 border-gray-200 rounded-xl p-1 shadow-sm w-fit">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${
+                viewMode === 'list' 
+                  ? 'bg-indigo-50 text-indigo-700 shadow-sm' 
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <LayoutList size={18} />
+              List
+            </button>
+            <button
+              onClick={() => setViewMode('kanban')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all ${
+                viewMode === 'kanban' 
+                  ? 'bg-indigo-50 text-indigo-700 shadow-sm' 
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <LayoutGrid size={18} />
+              Kanban
+            </button>
+          </div>
+        </div>
 
         {/* Stats + filters always visible — no layout jump on load */}
         <LeadsStatsCards stats={statsCards} />
@@ -275,14 +306,43 @@ export default function LeadsPage() {
               </div>
             )}
 
-            <LeadsTable
-              leads={leads}
-              statusColors={statusColors}
-              onDeleteLead={handleDeleteLead}
-              userRole={userRole}
-            />
+            {viewMode === 'list' ? (
+              <LeadsTable
+                leads={leads}
+                statusColors={statusColors}
+                onDeleteLead={handleDeleteLead}
+                userRole={userRole}
+              />
+            ) : (
+              <LeadsKanbanBoard
+                leads={leads}
+                statusColors={statusColors}
+                onLeadClick={(lead) => navigate(`/leads/edit/${lead.id}`)}
+                onDragEnd={async (result) => {
+                  const { destination, source, draggableId } = result;
+                  if (!destination || (destination.droppableId === source.droppableId)) return;
+                  
+                  const newStatus = destination.droppableId;
+                  // Optimistically update
+                  setLeads(prev => prev.map(l => l.id.toString() === draggableId ? { ...l, status: newStatus } : l));
+                  
+                  try {
+                    const res = await authFetch(`${API_BASE_URL}/leads/${draggableId}/`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ status: newStatus.toUpperCase() })
+                    });
+                    if (!res.ok) throw new Error('Status update failed');
+                  } catch (e) {
+                    // Revert on error
+                    setLeads(prev => prev.map(l => l.id.toString() === draggableId ? { ...l, status: source.droppableId } : l));
+                    alert('Failed to update lead status');
+                  }
+                }}
+              />
+            )}
 
-            {totalPages > 1 && (
+            {viewMode === 'list' && totalPages > 1 && (
               <Pagination
                 currentPage={page}
                 totalPages={totalPages}

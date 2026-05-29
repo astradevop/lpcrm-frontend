@@ -10,6 +10,7 @@ import { useAuth } from '../context/AuthContext';
 import Navbar from '../Components/layouts/Navbar';
 import LeadFollowUps from '../Components/leads/LeadFollowUps';
 import ConversionDetailSection from '../Components/leads/ConversionDetailSection';
+import UnifiedTimeline from '../Components/leads/UnifiedTimeline';
 
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -22,6 +23,7 @@ export default function LeadDetailPage() {
   const [lead, setLead] = useState(null);
   const [assignmentHistory, setAssignmentHistory] = useState([]);
   const [processingTimeline, setProcessingTimeline] = useState([]);
+  const [followUps, setFollowUps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('details');
 
@@ -97,6 +99,22 @@ export default function LeadDetailPage() {
       }
     };
     if (accessToken && leadId) fetchProcessingTimeline();
+  }, [leadId, accessToken, authFetch]);
+
+  // Fetch followups
+  useEffect(() => {
+    const fetchFollowUps = async () => {
+      try {
+        const res = await authFetch(`${API_BASE_URL}/followups/?lead=${leadId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setFollowUps(Array.isArray(data) ? data : (data.results || []));
+        }
+      } catch (err) {
+        console.error('Failed to load followups:', err);
+      }
+    };
+    if (accessToken && leadId) fetchFollowUps();
   }, [leadId, accessToken, authFetch]);
 
   const handleDelete = async () => {
@@ -178,6 +196,7 @@ export default function LeadDetailPage() {
 
   const TABS = [
     { id: 'details',    label: 'Details',    Icon: FileText      },
+    { id: 'timeline',   label: 'Timeline',   Icon: Clock         },
     { id: 'followups',  label: 'Follow-Ups', Icon: CalendarClock },
     { id: 'assignment', label: 'Assignment', Icon: Users         },
     { id: 'history',    label: 'History',    Icon: History       },
@@ -221,6 +240,26 @@ export default function LeadDetailPage() {
             {lead.processing_status?.replace('_', ' ')}
           </span>
         </div>
+
+        {/* Missing Action Warning */}
+        {followUps && !followUps.some(f => f.status === 'pending') && lead.status !== 'converted' && lead.status !== 'lost' && (
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3 shadow-sm">
+            <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 shrink-0" />
+            <div>
+              <h4 className="text-sm font-bold text-red-800">No Scheduled Follow-Up</h4>
+              <p className="text-sm text-red-700 mt-1">
+                This lead does not have any upcoming follow-ups scheduled. To prevent the lead from going cold, 
+                please schedule a follow-up action.
+              </p>
+              <button 
+                onClick={() => setActiveTab('followups')}
+                className="mt-2 text-sm font-bold text-red-700 hover:text-red-900 underline"
+              >
+                Schedule Follow-Up Now
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
@@ -321,6 +360,15 @@ export default function LeadDetailPage() {
                 <ConversionDetailSection lead={lead} />
 
               </div>
+            )}
+
+            {/* ── Timeline ────────────────────────────────────────── */}
+            {activeTab === 'timeline' && (
+              <UnifiedTimeline 
+                followUps={followUps} 
+                processingTimeline={processingTimeline} 
+                assignmentHistory={assignmentHistory} 
+              />
             )}
 
             {/* ── Follow-Ups ──────────────────────────────────────── */}
