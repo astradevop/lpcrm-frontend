@@ -17,6 +17,7 @@ export default function UploadDocumentModal({
     document_name: '',
     month: new Date().toISOString().slice(0, 7), 
     date: new Date().toISOString().split('T')[0],
+    company: 'LP',
     file: null
   });
   const [errors, setErrors] = useState({});
@@ -77,9 +78,10 @@ export default function UploadDocumentModal({
       if (!token) throw new Error('Authentication required');
 
       const submitData = new FormData();
-      submitData.append('document_name', formData.document_name);
+      submitData.append('name', formData.document_name);
       submitData.append('month', formData.month);
       submitData.append('date', formData.date);
+      submitData.append('company', formData.company);
       submitData.append('file', formData.file);
 
       const response = await fetch(`${apiBaseUrl}/api/hr/attendance/`, {
@@ -100,6 +102,7 @@ export default function UploadDocumentModal({
         document_name: '',
         month: new Date().toISOString().slice(0, 7),
         date: new Date().toISOString().split('T')[0],
+        company: 'LP',
         file: null
       });
       setErrors({});
@@ -118,6 +121,7 @@ export default function UploadDocumentModal({
       document_name: '',
       month: new Date().toISOString().slice(0, 7),
       date: new Date().toISOString().split('T')[0],
+      company: 'LP',
       file: null
     });
     setErrors({});
@@ -180,6 +184,22 @@ export default function UploadDocumentModal({
               error={errors.date}
               required
             />
+
+            {/* Company */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Company <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="company"
+                value={formData.company}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors bg-white text-gray-900"
+              >
+                <option value="LP">LP Group</option>
+                <option value="FLAG">FLAG</option>
+              </select>
+            </div>
 
             {/* File Upload */}
             <div>

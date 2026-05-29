@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  ArrowLeft, Save, User, Mail, Phone, Briefcase,
+  ArrowLeft, Save, User, Mail, Phone, Briefcase, Building,
   Calendar, FileText, Star, AlertCircle, CheckCircle, Upload, X
 } from 'lucide-react';
 
@@ -38,6 +38,7 @@ const emptyForm = {
   email: '',
   phone: '',
   position_applied: '',
+  company: 'LP',
   status: 'applied',
   interview_date: '',
   rating: '',
@@ -84,6 +85,7 @@ export default function CandidateFormPage() {
           email: data.email || '',
           phone: data.phone || '',
           position_applied: data.position_applied || '',
+          company: data.company || 'LP',
           status: data.status || 'applied',
           interview_date: data.interview_date
             ? new Date(data.interview_date).toISOString().slice(0, 16)
@@ -265,6 +267,17 @@ export default function CandidateFormPage() {
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
             <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-5">Personal Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            
+              <FieldWrapper label="Company Applying For" icon={Building} required>
+                <select
+                  value={form.company}
+                  onChange={e => handleChange('company', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium text-gray-700 bg-white transition-all"
+                >
+                  <option value="LP">LP Group</option>
+                  <option value="FLAG">FLAG</option>
+                </select>
+              </FieldWrapper>
 
               <FieldWrapper label="Full Name" icon={User} required error={errors.name}>
                 <input
