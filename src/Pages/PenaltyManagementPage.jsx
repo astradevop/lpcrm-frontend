@@ -33,7 +33,7 @@ export default function PenaltyManagementPage() {
   const [selectedMonth, setSelectedMonth] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [companyFilter, setCompanyFilter] = useState('');
+  const [companyFilter, setCompanyFilter] = useState(user?.company || 'LP');
 
   const [formData, setFormData] = useState({
     user: '',

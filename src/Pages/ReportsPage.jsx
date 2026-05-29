@@ -9,7 +9,7 @@ import { Calendar, FileText, Download, FolderOpen, TrendingUp, Clock, CheckCircl
 import { downloadCSV, downloadPDF } from '../utils/exportUtils';
 
 export default function ReportsPage() {
-  const { accessToken } = useAuth();
+  const { accessToken, user } = useAuth();
   const navigate = useNavigate();
 
   const [dateRange, setDateRange] = useState('this-month');
@@ -19,7 +19,7 @@ export default function ReportsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [companyFilter, setCompanyFilter] = useState('');
+  const [companyFilter, setCompanyFilter] = useState(user?.company || 'LP');
   
   const [selectedEmployee, setSelectedEmployee] = useState('all');
   const [selectedDate, setSelectedDate] = useState('all');
@@ -52,7 +52,7 @@ export default function ReportsPage() {
   const fetchEmployees = async () => {
     if (!accessToken) return;
     try {
-      const res = await axios.get(`${API_BASE}/accounts/staff/`, {
+      const res = await axios.get(`${API_BASE}/staffs/`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       setEmployees(res.data.results || res.data || []);
@@ -269,8 +269,9 @@ export default function ReportsPage() {
           </div>
           
           {/* Filter Bar */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div className="relative">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 items-end">
+            <div className="relative w-full">
+              <label className="text-xs text-gray-500 font-medium mb-1 block">Search</label>
               <input
                 type="text"
                 placeholder="Search reports..."
@@ -280,37 +281,43 @@ export default function ReportsPage() {
               />
             </div>
             
-            <select
-              value={selectedEmployee}
-              onChange={(e) => setSelectedEmployee(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white"
-            >
-              <option value="all">All Employees</option>
-              {employees.map(emp => (
-                <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name}</option>
-              ))}
-            </select>
+            <div className="flex flex-col gap-1 w-full">
+              <label className="text-xs text-gray-500 font-medium">Employee</label>
+              <select
+                value={selectedEmployee}
+                onChange={(e) => setSelectedEmployee(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white"
+              >
+                <option value="all">All Employees</option>
+                {employees.map(emp => (
+                  <option key={emp.id} value={emp.id}>{emp.full_name || emp.username || emp.first_name || `Employee #${emp.id}`}</option>
+                ))}
+              </select>
+            </div>
             
-            <select
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white"
-            >
-              <option value="all">All Dates</option>
-              <option value="today">Today</option>
-              <option value="yesterday">Yesterday</option>
-            </select>
+            <div className="flex flex-col gap-1 w-full">
+              <label className="text-xs text-gray-500 font-medium">Filter by Date</label>
+              <input
+                type="date"
+                value={selectedDate === 'all' ? '' : selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value || 'all')}
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white"
+              />
+            </div>
             
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white"
-            >
-              <option value="all">All Statuses</option>
-              <option value="pending">Pending</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
-            </select>
+            <div className="flex flex-col gap-1 w-full">
+              <label className="text-xs text-gray-500 font-medium">Status</label>
+              <select
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white"
+              >
+                <option value="all">All Statuses</option>
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
           </div>
 
           <div id="reports-exportable-view" className="overflow-x-auto">
