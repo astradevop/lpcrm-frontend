@@ -21,6 +21,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { downloadCSV, downloadPDF } from '../utils/exportUtils';
 import Pagination from '../Components/common/Pagination';
+import StaffPermissionsModal from '../Components/staffs/StaffPermissionsModal';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -41,6 +42,9 @@ export default function StaffPage() {
     previous: null,
     currentPage: 1,
   });
+
+  const [permissionsModalOpen, setPermissionsModalOpen] = useState(false);
+  const [selectedStaffForPerms, setSelectedStaffForPerms] = useState(null);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -111,6 +115,7 @@ export default function StaffPage() {
             }),
             // Professional initials-based avatar
             initials: `${staff.first_name?.[0] || ''}${staff.last_name?.[0] || staff.username?.[0] || '?'}`.toUpperCase(),
+            permissions: staff.permissions || [],
           }))
           // Filter out Admin and Managing Director roles
           .filter((staff) => {
@@ -456,6 +461,16 @@ export default function StaffPage() {
                         <Edit size={16} /> Edit
                       </button>
                       <button
+                        onClick={() => {
+                          setSelectedStaffForPerms(staff);
+                          setPermissionsModalOpen(true);
+                        }}
+                        className="px-4 py-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2 font-medium"
+                        title="Manage Permissions"
+                      >
+                        <ShieldAlert size={16} />
+                      </button>
+                      <button
                         onClick={() => handleDelete(staff.id)}
                         className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
                       >
@@ -479,6 +494,20 @@ export default function StaffPage() {
           </div>
         )}
       </div>
+
+      <StaffPermissionsModal
+        isOpen={permissionsModalOpen}
+        onClose={() => setPermissionsModalOpen(false)}
+        staffId={selectedStaffForPerms?.id}
+        currentPermissions={selectedStaffForPerms?.permissions}
+        authFetch={authFetch}
+        apiBaseUrl={API_BASE_URL}
+        onSave={(newPerms) => {
+          setPermissionsModalOpen(false);
+          // Refresh staff list to get updated permissions
+          fetchStaff(pagination.currentPage, searchTerm, filterDepartment, filterBranch, filterStatus);
+        }}
+      />
     </div>
   );
 }

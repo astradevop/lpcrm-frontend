@@ -252,7 +252,7 @@ export default function AllFollowUpsPage() {
   const tokenRef  = useRef(accessToken);
   useEffect(() => { tokenRef.current = accessToken; }, [accessToken]);
 
-  const isAdmin = ['ADMIN', 'CEO', 'OPS'].includes(user?.role?.toUpperCase());
+  const isAdmin = user?.permissions?.includes('view_staff');
 
   const today    = toLocalISO(new Date());
   const tomorrow = toLocalISO(new Date(Date.now() + 86400000));

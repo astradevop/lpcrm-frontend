@@ -116,7 +116,7 @@ export default function CandidateDetailPage() {
   const [deleting, setDeleting] = useState(false);
   const [toast, setToast] = useState(null);
 
-  const canManage = CANDIDATE_ASSIGNER_ROLES.includes(user?.role);
+  const canManage = user?.permissions?.includes('edit_candidates');
 
   const getToken = useCallback(async () => {
     const token = accessToken || await refreshAccessToken();

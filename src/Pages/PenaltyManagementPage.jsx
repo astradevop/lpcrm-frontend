@@ -42,7 +42,7 @@ export default function PenaltyManagementPage() {
   });
 
   const [errors, setErrors] = useState({});
-  const canManagePenalties = user?.role === 'ADMIN' || user?.role === 'HR' || user?.role === 'ACCOUNTS';
+  const canManagePenalties = user?.permissions?.includes('edit_penalties');
 
   const generateMonthOptions = () => {
     const months = [

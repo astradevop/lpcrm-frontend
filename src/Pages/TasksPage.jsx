@@ -39,7 +39,7 @@ export default function TasksPage() {
   const [error,   setError]   = useState(null);
 
   // FIX: any role in TASK_ASSIGNERS can see the Create button, not just ADMIN
-  const canAssignTasks = TASK_ASSIGNER_ROLES.includes(user?.role);
+  const canAssignTasks = user?.permissions?.includes('edit_tasks');
 
   // ── Stat card config ───────────────────────────────────────────────────────
   const statsData = stats ? [

@@ -64,7 +64,7 @@ export default function CandidatesPage() {
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState(null);
 
-  const canManage = CANDIDATE_ASSIGNER_ROLES.includes(user?.role);
+  const canManage = user?.permissions?.includes('edit_candidates');
 
   // ── Stat card config ───────────────────────────────────────────────────────
   const statsData = stats ? [

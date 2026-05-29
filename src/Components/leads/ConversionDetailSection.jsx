@@ -14,7 +14,7 @@ export default function ConversionDetailSection({ lead }) {
   const [error,   setError]   = useState(null);
   const [form,    setForm]    = useState({});
 
-  const canEdit = CONVERSION_ROLES.includes(user?.role?.toUpperCase());
+  const canEdit = user?.permissions?.includes('view_leads');
 
   // ── Fetch existing conversion detail
   useEffect(() => {

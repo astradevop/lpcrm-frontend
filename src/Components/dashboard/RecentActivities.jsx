@@ -112,7 +112,7 @@ const PAGE_SIZE = 20;
 
 export default function RecentActivities() {
   const { accessToken, refreshAccessToken, user } = useAuth();
-  const isAdmin = ADMIN_ROLES.includes(user?.role?.toUpperCase());
+  const isAdmin = user?.permissions?.includes('view_staff');
 
   const [activities, setActivities]     = useState([]);
   const [loading, setLoading]           = useState(true);

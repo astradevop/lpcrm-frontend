@@ -102,7 +102,7 @@ export default function TaskViewPage() {
 
     // FIX: coerce both sides to Number to avoid string vs int mismatch
     const createdByMe = Number(task.assigned_by) === Number(user.id);
-    return TASK_ASSIGNER_ROLES.includes(user.role) && createdByMe;
+    return user?.permissions?.includes('edit_tasks') && createdByMe;
   };
 
   const canUpdateStatus = () => {

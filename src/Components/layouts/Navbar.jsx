@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { getMenuForRole } from '../../config/roles';
+import { getMenuForPermissions } from '../../config/roles';
 import DesktopNavbar from './DesktopNavbar';
 import MobileNavbar from './MobileNavbar';
 import { useUserChannel } from '../../hooks/useUserChannel';
@@ -99,7 +99,7 @@ const Navbar = () => {
     }),
   });
 
-  const navItems = getMenuForRole(user?.role);
+  const navItems = getMenuForPermissions(user?.permissions);
   const handleNavigation = (path) => { navigate(path); setIsMobileMenuOpen(false); };
   const handleLogout = async () => { await logout(); navigate('/login'); };
   const handleChatOpen = () => { navigate('/chat'); setIsMobileMenuOpen(false); };
