@@ -35,6 +35,8 @@ export default function TasksPage() {
   const [filterPriority,  setFilterPriority]  = useState('all');
   const [filterDate,      setFilterDate]      = useState('all');
   const [filterSpecificDate, setFilterSpecificDate] = useState('');
+  const [selectedMonth, setSelectedMonth] = useState('all');
+  const [selectedYear, setSelectedYear] = useState('all');
   const [companyFilter, setCompanyFilter] = useState('');
 
   const [loading, setLoading] = useState(true);
@@ -105,7 +107,12 @@ export default function TasksPage() {
   const fetchStats = useCallback(async () => {
     try {
       const token = await getToken();
-      const url = companyFilter ? `${API_BASE_URL}/tasks/stats/?company=${companyFilter}` : `${API_BASE_URL}/tasks/stats/`;
+      const params = new URLSearchParams();
+      if (companyFilter) params.set('company', companyFilter);
+      if (selectedMonth && selectedMonth !== 'all') params.set('month', selectedMonth);
+      if (selectedYear && selectedYear !== 'all') params.set('year', selectedYear);
+      
+      const url = `${API_BASE_URL}/tasks/stats/?${params.toString()}`;
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       });
@@ -115,7 +122,7 @@ export default function TasksPage() {
       console.error('Stats error:', err);
       setStats({ total: 0, pending: 0, in_progress: 0, completed: 0, overdue: 0 });
     }
-  }, [API_BASE_URL, getToken]);
+  }, [API_BASE_URL, getToken, companyFilter, selectedMonth, selectedYear]);
 
   const fetchTasks = useCallback(async () => {
     try {
@@ -138,6 +145,9 @@ export default function TasksPage() {
           params.set('date_filter', filterDate);
         }
       }
+      
+      if (selectedMonth && selectedMonth !== 'all') params.set('month', selectedMonth);
+      if (selectedYear && selectedYear !== 'all') params.set('year', selectedYear);
 
       const res = await fetch(`${API_BASE_URL}/tasks/?${params}`, {
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -154,10 +164,10 @@ export default function TasksPage() {
     } finally {
       setLoading(false);
     }
-  }, [API_BASE_URL, getToken, page, searchTerm, filterStatus, filterPriority, filterDate, filterSpecificDate, companyFilter]);
+  }, [API_BASE_URL, getToken, page, searchTerm, filterStatus, filterPriority, filterDate, filterSpecificDate, companyFilter, selectedMonth, selectedYear]);
 
   // Reset to page 1 when filters change
-  useEffect(() => { setPage(1); }, [searchTerm, filterStatus, filterPriority, filterDate, filterSpecificDate, companyFilter]);
+  useEffect(() => { setPage(1); }, [searchTerm, filterStatus, filterPriority, filterDate, filterSpecificDate, companyFilter, selectedMonth, selectedYear]);
 
   useEffect(() => {
     fetchTasks();
@@ -397,9 +407,9 @@ export default function TasksPage() {
               </button>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
             {/* Search */}
-            <div className="md:col-span-1 relative">
+            <div className="lg:col-span-2 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
               <input
                 type="text"
@@ -459,6 +469,40 @@ export default function TasksPage() {
                 />
               )}
             </div>
+
+            {/* Month filter */}
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium text-gray-700 bg-white"
+            >
+              <option value="all">All Months</option>
+              <option value="1">January</option>
+              <option value="2">February</option>
+              <option value="3">March</option>
+              <option value="4">April</option>
+              <option value="5">May</option>
+              <option value="6">June</option>
+              <option value="7">July</option>
+              <option value="8">August</option>
+              <option value="9">September</option>
+              <option value="10">October</option>
+              <option value="11">November</option>
+              <option value="12">December</option>
+            </select>
+
+            {/* Year filter */}
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              className="px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium text-gray-700 bg-white"
+            >
+              <option value="all">All Years</option>
+              <option value="2024">2024</option>
+              <option value="2025">2025</option>
+              <option value="2026">2026</option>
+              <option value="2027">2027</option>
+            </select>
           </div>
         </div>
 
