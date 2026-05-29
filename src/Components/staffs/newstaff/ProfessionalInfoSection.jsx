@@ -94,19 +94,21 @@ const ProfessionalInfoSection = React.memo(({ formData, errors, onChange, branch
           />
         )}
 
-        {/* Active Status Checkbox */}
-        <div className="flex items-center sm:col-span-2">
-          <label className="flex items-center gap-3 cursor-pointer">
+        {/* Active Status Premium Toggle */}
+        <div className="sm:col-span-2 bg-gray-50 border border-gray-200 rounded-xl p-4 flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-bold text-gray-900">Active Status</h3>
+            <p className="text-xs text-gray-500 mt-1">Inactive staff cannot log in, but their historical data is preserved.</p>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
               name="isActive"
               checked={formData.isActive}
               onChange={onChange}
-              className="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-2 focus:ring-indigo-500"
+              className="sr-only peer"
             />
-            <span className="text-sm font-medium text-gray-700">
-              Active Status (Staff member is active)
-            </span>
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
           </label>
         </div>
       </div>

@@ -111,22 +111,18 @@ export default function StaffPermissionsModal({ isOpen, onClose, staffId, curren
                       <div 
                         key={perm.id} 
                         onClick={() => handleToggle(perm.id)}
-                        className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                        className={`flex items-center justify-between p-3.5 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
                           isSelected 
-                            ? 'border-indigo-500 bg-indigo-50' 
-                            : 'border-transparent hover:bg-gray-50'
+                            ? 'border-indigo-500 bg-indigo-50 shadow-sm' 
+                            : 'border-transparent hover:bg-gray-50 hover:border-gray-200'
                         }`}
                       >
-                        <div className={`w-5 h-5 rounded flex items-center justify-center border transition-colors ${
-                          isSelected 
-                            ? 'bg-indigo-600 border-indigo-600' 
-                            : 'border-gray-300 bg-white'
-                        }`}>
-                          {isSelected && <Check size={14} className="text-white" />}
-                        </div>
-                        <span className={`text-sm font-medium ${isSelected ? 'text-indigo-900' : 'text-gray-700'}`}>
+                        <span className={`text-sm font-semibold transition-colors ${isSelected ? 'text-indigo-900' : 'text-gray-700'}`}>
                           {perm.label}
                         </span>
+                        <div className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors duration-200 ease-in-out ${isSelected ? 'bg-indigo-600' : 'bg-gray-200'}`}>
+                          <span className={`inline-block w-5 h-5 transform bg-white rounded-full transition duration-200 ease-in-out ${isSelected ? 'translate-x-5' : 'translate-x-1'}`} />
+                        </div>
                       </div>
                     );
                   })}

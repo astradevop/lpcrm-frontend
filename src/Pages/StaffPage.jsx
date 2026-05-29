@@ -8,7 +8,6 @@ import {
   Phone,
   MapPin,
   Edit,
-  Trash2,
   UserCheck,
   UserX,
   Users,
@@ -173,22 +172,6 @@ export default function StaffPage() {
     return () => clearTimeout(timer);
   }, [searchTerm, filterDepartment, filterBranch, filterStatus, companyFilter, accessToken, authLoading]);
 
-  // Delete staff member
-  const handleDelete = async (staffId) => {
-    if (!window.confirm('Are you sure you want to delete this staff member?')) return;
-
-    try {
-      await authFetch(`${API_BASE_URL}/staff/${staffId}/delete/`, {
-        method: 'DELETE',
-      });
-
-      fetchStaff(pagination.currentPage, searchTerm, filterDepartment, filterBranch, filterStatus, companyFilter);
-      alert('Staff member deleted successfully');
-    } catch (err) {
-      console.error('Failed to delete staff:', err);
-      alert('Failed to delete staff member');
-    }
-  };
 
   // Departments for filter dropdown
   const departments = useMemo(() => {
@@ -408,7 +391,7 @@ export default function StaffPage() {
               {staffMembers.map((staff) => (
                 <div
                   key={staff.id}
-                  className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-slate-200 hover:border-indigo-300 transform hover:-translate-y-1"
+                  className="bg-white/70 backdrop-blur-md rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300 overflow-hidden border border-white/50 hover:border-indigo-300/50 transform hover:-translate-y-1"
                 >
                   <div className="p-6">
                     <div className="flex items-start justify-between mb-4">
@@ -481,14 +464,7 @@ export default function StaffPage() {
                           <ShieldAlert size={16} />
                         </button>
                       )}
-                      {user?.permissions?.includes('delete_staff') && (
-                        <button
-                          onClick={() => handleDelete(staff.id)}
-                          className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      )}
+
                     </div>
                   </div>
                 </div>
