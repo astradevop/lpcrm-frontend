@@ -110,4 +110,4 @@ const KanbanBoard = ({ tasks, onDragEnd, canAssignTasks, currentUser }) => {
   );
 };
 
-export default KanbanBoard;
+export default React.memo(KanbanBoard);

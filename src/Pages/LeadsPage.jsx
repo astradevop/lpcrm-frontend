@@ -217,7 +217,7 @@ export default function LeadsPage() {
     // Cancel in-flight request when filters change before it completes
     return () => controller.abort();
   }, [
-    authLoading, accessToken, authFetch,
+    authLoading, authFetch,
     page, debouncedSearch,
     filterStatus, filterPriority, filterSource, filterStaff, companyFilter,
   ]);

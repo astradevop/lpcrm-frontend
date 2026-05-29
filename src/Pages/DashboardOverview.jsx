@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../Components/layouts/Navbar';
 import { useAuth } from '../context/AuthContext';
@@ -75,8 +75,12 @@ export default function DashboardOverview() {
     }
   };
 
+  const hasFetched = useRef(false);
+
   useEffect(() => {
     const loadDashboardData = async () => {
+      if (hasFetched.current) return;
+      hasFetched.current = true;
       setLoading(true);
       setError(null);
 

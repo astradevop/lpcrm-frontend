@@ -8,6 +8,60 @@ import Pagination from '../Components/common/Pagination';
 import { Calendar, FileText, Download, FolderOpen, TrendingUp, Clock, CheckCircle, Eye, AlertCircle, XCircle, Paperclip } from 'lucide-react';
 import { downloadCSV, downloadPDF } from '../utils/exportUtils';
 
+const ReportRow = React.memo(({ report, isLate, getStatusBadge, navigate, downloadFile }) => {
+  return (
+    <tr className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 ${isLate ? 'bg-red-50/50' : ''}`}>
+      <td className="px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className={`w-10 h-10 ${isLate ? 'bg-gradient-to-br from-red-500 to-rose-600' : 'bg-gradient-to-br from-blue-500 to-indigo-600'} rounded-lg flex items-center justify-center shadow-md`}>
+            <FileText className="text-white w-5 h-5" />
+          </div>
+          <div className="flex flex-col">
+            <span className="font-semibold text-gray-900">{report.name}</span>
+            {isLate && <span className="text-xs text-red-600 font-bold">Late Submission</span>}
+          </div>
+        </div>
+      </td>
+      <td className="px-6 py-4">
+        <span className="text-gray-700 font-medium">{report.heading}</span>
+      </td>
+      <td className="px-6 py-4 text-sm font-medium text-gray-700">{report.user_name || 'N/A'}</td>
+      <td className="px-6 py-4 text-sm text-gray-600 font-medium">{report.report_date}</td>
+      <td className="px-6 py-4">{getStatusBadge(report)}</td>
+      <td className="px-6 py-4">
+        <div className="flex items-center gap-2">
+          {/* View Report Details */}
+          <button
+            onClick={() => navigate(`/reports/view/${report.id}`)}
+            className="p-2.5 text-indigo-600 hover:bg-indigo-100 rounded-lg transition-all duration-200 hover:scale-110 shadow-sm hover:shadow-md"
+            title="View Report Details"
+          >
+            View
+          </button>
+
+          {/* Download Attachments */}
+          {report.attachments?.length > 0 && (
+            <button
+              onClick={() => downloadFile(report.attachments[0])}
+              className="p-2.5 text-green-600 hover:bg-green-100 rounded-lg transition-all duration-200 hover:scale-110 shadow-sm hover:shadow-md"
+              title={`Download ${report.attachments[0].original_filename || 'attachment'}`}
+            >
+              <div className="flex items-center gap-1">
+                <Download size={18} />
+                {report.attachments.length > 1 && (
+                  <span className="text-xs font-bold bg-green-600 text-white rounded-full w-4 h-4 flex items-center justify-center">
+                    {report.attachments.length}
+                  </span>
+                )}
+              </div>
+            </button>
+          )}
+        </div>
+      </td>
+    </tr>
+  );
+});
+
 export default function ReportsPage() {
   const { accessToken, user } = useAuth();
   const navigate = useNavigate();
@@ -109,7 +163,7 @@ export default function ReportsPage() {
   // ── Download via Django proxy ─────────────────────────────────────────────
   // Django fetches from Cloudinary server-side and responds with
   // Content-Disposition: attachment; filename="original_name.pdf"
-  const downloadFile = async (attachment) => {
+  const downloadFile = useCallback(async (attachment) => {
     if (!attachment?.id) return;
     try {
       const response = await fetch(
@@ -131,9 +185,9 @@ export default function ReportsPage() {
       console.error('Download failed:', err);
       alert('Download failed. Please try again.');
     }
-  };
+  }, [accessToken, API_BASE]);
 
-  const getStatusBadge = (report) => {
+  const getStatusBadge = useCallback((report) => {
     const status = report.status?.toLowerCase();
     if (status === 'approved') {
       return (
@@ -157,7 +211,7 @@ export default function ReportsPage() {
         </span>
       );
     }
-  };
+  }, []);
 
   const isLateReport = (report) => {
     if (!report.created_at) return false;
@@ -355,59 +409,16 @@ export default function ReportsPage() {
                     </td>
                   </tr>
                 ) : (
-                  recentReports.map((report) => {
-                    const isLate = isLateReport(report);
-                    return (
-                    <tr key={report.id} className={`hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 transition-all duration-200 ${isLate ? 'bg-red-50/50' : ''}`}>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 ${isLate ? 'bg-gradient-to-br from-red-500 to-rose-600' : 'bg-gradient-to-br from-blue-500 to-indigo-600'} rounded-lg flex items-center justify-center shadow-md`}>
-                            <FileText className="text-white w-5 h-5" />
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="font-semibold text-gray-900">{report.name}</span>
-                            {isLate && <span className="text-xs text-red-600 font-bold">Late Submission</span>}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-gray-700 font-medium">{report.heading}</span>
-                      </td>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-700">{report.user_name || 'N/A'}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600 font-medium">{report.report_date}</td>
-                      <td className="px-6 py-4">{getStatusBadge(report)}</td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          {/* View Report Details */}
-                          <button
-                            onClick={() => navigate(`/reports/view/${report.id}`)}
-                            className="p-2.5 text-indigo-600 hover:bg-indigo-100 rounded-lg transition-all duration-200 hover:scale-110 shadow-sm hover:shadow-md"
-                            title="View Report Details"
-                          >
-                            View
-                          </button>
-
-                          {/* ✅ FIXED: was report.attached_file — now checks attachments array */}
-                          {report.attachments?.length > 0 && (
-                            <button
-                              onClick={() => downloadFile(report.attachments[0])}
-                              className="p-2.5 text-green-600 hover:bg-green-100 rounded-lg transition-all duration-200 hover:scale-110 shadow-sm hover:shadow-md"
-                              title={`Download ${report.attachments[0].original_filename || 'attachment'}`}
-                            >
-                              <div className="flex items-center gap-1">
-                                <Download size={18} />
-                                {report.attachments.length > 1 && (
-                                  <span className="text-xs font-bold bg-green-600 text-white rounded-full w-4 h-4 flex items-center justify-center">
-                                    {report.attachments.length}
-                                  </span>
-                                )}
-                              </div>
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  )})
+                  recentReports.map((report) => (
+                    <ReportRow 
+                      key={report.id} 
+                      report={report} 
+                      isLate={isLateReport(report)} 
+                      getStatusBadge={getStatusBadge}
+                      navigate={navigate}
+                      downloadFile={downloadFile}
+                    />
+                  ))
                 )}
               </tbody>
             </table>

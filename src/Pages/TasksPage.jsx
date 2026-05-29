@@ -174,7 +174,7 @@ export default function TasksPage() {
     fetchStats();
   }, [fetchTasks, fetchStats]);
 
-  const onDragEnd = async (result) => {
+  const onDragEnd = useCallback(async (result) => {
     const { destination, source, draggableId } = result;
 
     if (!destination) return;
@@ -227,7 +227,7 @@ export default function TasksPage() {
       setTasks(originalTasks);
       // Maybe show a toast error here
     }
-  };
+  }, [tasks, getToken, API_BASE_URL, fetchStats]);
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 

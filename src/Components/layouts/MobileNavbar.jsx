@@ -87,4 +87,4 @@ const MobileNavbar = ({
   );
 };
 
-export default MobileNavbar;
+export default React.memo(MobileNavbar);
