@@ -83,23 +83,33 @@ export const AuthProvider = ({ children }) => {
   // Initialize auth on app load
   useEffect(() => {
     const initAuth = async () => {
-      const storedUser = localStorage.getItem('user');
-      const storedRefreshToken = localStorage.getItem('refreshToken');
+      try {
+        const storedUser = localStorage.getItem('user');
+        const storedRefreshToken = localStorage.getItem('refreshToken');
 
-      if (storedUser && storedRefreshToken) {
-        const newAccessToken = await refreshAccessToken();
+        if (storedUser && storedRefreshToken) {
+          const newAccessToken = await refreshAccessToken();
 
-        if (newAccessToken) {
-          setUser(JSON.parse(storedUser));
+          if (newAccessToken) {
+            try {
+              setUser(JSON.parse(storedUser));
+            } catch (e) {
+              console.error('Failed to parse stored user:', e);
+              localStorage.removeItem('user');
+              localStorage.removeItem('refreshToken');
+            }
+          } else {
+            localStorage.removeItem('user');
+            localStorage.removeItem('refreshToken');
+          }
         } else {
-          localStorage.removeItem('user');
-          localStorage.removeItem('refreshToken');
+          console.log('👤 No stored credentials found');
         }
-      } else {
-        console.log('👤 No stored credentials found');
+      } catch (err) {
+        console.error('Auth init failed:', err);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
     initAuth();
