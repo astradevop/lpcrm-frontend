@@ -20,6 +20,12 @@ export default function ReportsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [companyFilter, setCompanyFilter] = useState('');
+  
+  const [selectedEmployee, setSelectedEmployee] = useState('all');
+  const [selectedDate, setSelectedDate] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [employees, setEmployees] = useState([]);
 
   const PAGE_SIZE = 50;
   const API_BASE = import.meta.env.VITE_API_BASE_URL;
@@ -27,13 +33,31 @@ export default function ReportsPage() {
   const fetchStats = async () => {
     if (!accessToken) return;
     try {
+      const params = {};
+      if (companyFilter) params.company = companyFilter;
+      if (selectedEmployee && selectedEmployee !== 'all') params.user = selectedEmployee;
+      if (selectedDate && selectedDate !== 'all') params.date = selectedDate;
+      if (searchTerm) params.search = searchTerm;
+      
       const res = await axios.get(`${API_BASE}/admin/reports/stats/`, {
-        params: companyFilter ? { company: companyFilter } : {},
+        params,
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       setStatsData(res.data);
     } catch (err) {
       console.error('Failed to fetch stats:', err);
+    }
+  };
+
+  const fetchEmployees = async () => {
+    if (!accessToken) return;
+    try {
+      const res = await axios.get(`${API_BASE}/accounts/staff/`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      setEmployees(res.data.results || res.data || []);
+    } catch (err) {
+      console.error('Failed to fetch employees:', err);
     }
   };
 
@@ -43,6 +67,10 @@ export default function ReportsPage() {
     try {
       const params = { page: pageNumber, page_size: PAGE_SIZE };
       if (companyFilter) params.company = companyFilter;
+      if (selectedEmployee && selectedEmployee !== 'all') params.user = selectedEmployee;
+      if (selectedDate && selectedDate !== 'all') params.date = selectedDate;
+      if (selectedStatus && selectedStatus !== 'all') params.status = selectedStatus;
+      if (searchTerm) params.search = searchTerm;
       const res = await axios.get(`${API_BASE}/admin/reports/`, {
         params,
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -59,12 +87,23 @@ export default function ReportsPage() {
   };
 
   useEffect(() => {
-    fetchStats();
-  }, [accessToken, companyFilter]);
+    fetchEmployees();
+  }, [accessToken]);
 
   useEffect(() => {
-    fetchReports(page);
-  }, [accessToken, page, companyFilter]);
+    fetchStats();
+  }, [accessToken, companyFilter, selectedEmployee, selectedDate, searchTerm]);
+
+  useEffect(() => {
+    setPage(1);
+    fetchReports(1);
+  }, [companyFilter, selectedEmployee, selectedDate, selectedStatus, searchTerm]);
+
+  useEffect(() => {
+    if (page !== 1) {
+      fetchReports(page);
+    }
+  }, [accessToken, page]);
 
 
   // ── Download via Django proxy ─────────────────────────────────────────────
@@ -227,6 +266,51 @@ export default function ReportsPage() {
                 Refresh →
               </button>
             </div>
+          </div>
+          
+          {/* Filter Bar */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search reports..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-4 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+              />
+            </div>
+            
+            <select
+              value={selectedEmployee}
+              onChange={(e) => setSelectedEmployee(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white"
+            >
+              <option value="all">All Employees</option>
+              {employees.map(emp => (
+                <option key={emp.id} value={emp.id}>{emp.first_name} {emp.last_name}</option>
+              ))}
+            </select>
+            
+            <select
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white"
+            >
+              <option value="all">All Dates</option>
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+            </select>
+            
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-white"
+            >
+              <option value="all">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
           </div>
 
           <div id="reports-exportable-view" className="overflow-x-auto">

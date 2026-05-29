@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import Navbar from '../Components/layouts/Navbar';
 import CompanySwitcher from '../Components/common/CompanySwitcher';
 import {
-  DollarSign,
+  IndianRupee,
   Plus,
   X,
   Calendar,
@@ -389,7 +389,7 @@ export default function PenaltyManagementPage() {
                   Total Penalties for {formatMonth(selectedMonth)}
                 </p>
                 <p className="text-4xl font-bold">
-                  ${totalPenalty.toFixed(2)}
+                  ₹{totalPenalty.toFixed(2)}
                 </p>
                 <p className="text-indigo-100 text-sm mt-1">
                   {filteredPenalties.length} {filteredPenalties.length === 1 ? 'penalty' : 'penalties'} recorded
@@ -523,7 +523,7 @@ export default function PenaltyManagementPage() {
                         </td>
                         <td className="px-6 py-4">
                           <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold bg-red-100 text-red-700">
-                            <DollarSign className="w-4 h-4" />
+                            <IndianRupee className="w-4 h-4" />
                             {parseFloat(penalty.amount).toFixed(2)}
                           </span>
                         </td>
@@ -583,7 +583,7 @@ export default function PenaltyManagementPage() {
                       </div>
                     </div>
                     <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold bg-red-100 text-red-700">
-                      <DollarSign className="w-4 h-4" />
+                      <IndianRupee className="w-4 h-4" />
                       {parseFloat(penalty.amount).toFixed(2)}
                     </span>
                   </div>
@@ -697,10 +697,10 @@ export default function PenaltyManagementPage() {
                   {/* Amount */}
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Amount ($) <span className="text-red-500">*</span>
+                      Amount (₹) <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
-                      <DollarSign className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <IndianRupee className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                       <input
                         type="number"
                         name="amount"
