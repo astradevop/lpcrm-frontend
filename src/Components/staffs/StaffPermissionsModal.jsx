@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, AlertCircle } from 'lucide-react';
+import { X, Save, AlertCircle, Check } from 'lucide-react';
 
 const PERMISSION_OPTIONS = [
   { id: 'view_overview', label: 'View Overview', group: 'Navigation' },
@@ -104,8 +104,9 @@ export default function StaffPermissionsModal({ isOpen, onClose, staffId, curren
                   {perms.map(perm => {
                     const isSelected = permissions.includes(perm.id);
                     return (
-                      <label 
+                      <div 
                         key={perm.id} 
+                        onClick={() => handleToggle(perm.id)}
                         className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
                           isSelected 
                             ? 'border-indigo-500 bg-indigo-50' 
@@ -117,12 +118,12 @@ export default function StaffPermissionsModal({ isOpen, onClose, staffId, curren
                             ? 'bg-indigo-600 border-indigo-600' 
                             : 'border-gray-300 bg-white'
                         }`}>
-                          {isSelected && <X size={14} className="text-white transform rotate-45" />}
+                          {isSelected && <Check size={14} className="text-white" />}
                         </div>
                         <span className={`text-sm font-medium ${isSelected ? 'text-indigo-900' : 'text-gray-700'}`}>
                           {perm.label}
                         </span>
-                      </label>
+                      </div>
                     );
                   })}
                 </div>
