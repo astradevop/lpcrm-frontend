@@ -64,6 +64,8 @@ export default function LeadsPage() {
   const [filterPriority, setFilterPriority]   = useState('all');
   const [filterSource, setFilterSource]       = useState('all');
   const [filterStaff, setFilterStaff]         = useState('all');
+  const [filterCampaign, setFilterCampaign]   = useState('');
+  const [filterToday, setFilterToday]         = useState(false);
   const [companyFilter, setCompanyFilter]     = useState('');
   const [viewMode, setViewMode]               = useState('list'); // 'list' | 'kanban'
   const [loading, setLoading]                 = useState(false);
@@ -133,6 +135,38 @@ export default function LeadsPage() {
   const handleSetFilterPriority = useCallback(v => { setPage(1); setFilterPriority(v); }, []);
   const handleSetFilterSource   = useCallback(v => { setPage(1); setFilterSource(v);   }, []);
   const handleSetFilterStaff    = useCallback(v => { setPage(1); setFilterStaff(v);    }, []);
+  
+  const handleExportExcel = async () => {
+    try {
+      const paramsObj = {};
+      if (companyFilter)            paramsObj.company   = companyFilter;
+      if (debouncedSearch)          paramsObj.search    = debouncedSearch;
+      if (filterStatus !== 'all')   paramsObj.status    = filterStatus.toUpperCase();
+      if (filterPriority !== 'all') paramsObj.priority  = filterPriority.toUpperCase();
+      if (filterSource !== 'all')   paramsObj.source    = filterSource.toUpperCase();
+      if (filterStaff !== 'all') {
+        if (filterStaff === 'unassigned') paramsObj.assigned_to__isnull = 'true';
+        else                              paramsObj.assigned_to          = filterStaff;
+      }
+      if (filterCampaign)           paramsObj.campaign_name__icontains = filterCampaign;
+      if (filterToday)              paramsObj.created_at__date = new Date().toISOString().split('T')[0];
+
+      const res = await authFetch(`${API_BASE_URL}/leads/export/?${new URLSearchParams(paramsObj)}`);
+      if (!res.ok) throw new Error('Export failed');
+      
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Leads_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } catch (err) {
+      console.error('Export error:', err);
+      alert('Failed to export leads');
+    }
+  };
 
   //  Single effect: staff + leads fetched in parallel; stale requests aborted automatically
   useEffect(() => {
@@ -155,6 +189,8 @@ export default function LeadsPage() {
           if (filterStaff === 'unassigned') paramsObj.assigned_to__isnull = 'true';
           else                              paramsObj.assigned_to          = filterStaff;
         }
+        if (filterCampaign)           paramsObj.campaign_name__icontains = filterCampaign;
+        if (filterToday)              paramsObj.created_at__date = new Date().toISOString().split('T')[0];
 
         //  Parallel: staff only on first load, leads every time
         const [leadsRes, staffRes] = await Promise.all([
@@ -224,6 +260,7 @@ export default function LeadsPage() {
     authLoading, authFetch,
     page, debouncedSearch,
     filterStatus, filterPriority, filterSource, filterStaff, companyFilter,
+    filterCampaign, filterToday,
   ]);
 
   const statsCards = useMemo(() => [
@@ -276,6 +313,13 @@ export default function LeadsPage() {
               Kanban
             </button>
           </div>
+          
+          <button
+            onClick={handleExportExcel}
+            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 transition-colors shadow-sm"
+          >
+            Export Excel
+          </button>
         </div>
 
         {/* Stats + filters always visible — no layout jump on load */}
@@ -293,6 +337,10 @@ export default function LeadsPage() {
           filterStaff={filterStaff}
           setFilterStaff={handleSetFilterStaff}
           staffMembers={staffMembers}
+          filterCampaign={filterCampaign}
+          setFilterCampaign={(v) => { setPage(1); setFilterCampaign(v); }}
+          filterToday={filterToday}
+          setFilterToday={(v) => { setPage(1); setFilterToday(v); }}
         />
 
         {/* Skeleton on first load; stale table + subtle banner on filter changes */}

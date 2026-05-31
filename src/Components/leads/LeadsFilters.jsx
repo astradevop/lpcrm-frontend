@@ -14,6 +14,10 @@ const LeadsFilters = ({
   filterStaff,
   setFilterStaff,
   staffMembers,
+  filterCampaign,
+  setFilterCampaign,
+  filterToday,
+  setFilterToday,
 }) => {
   const statusOptions = [
     { id: 'all', label: 'All Status' },
@@ -105,6 +109,26 @@ const LeadsFilters = ({
             displayValue={(opt) => opt?.label || 'Select Staff'}
           />
 
+          {/* Campaign Filter */}
+          <input
+            type="text"
+            placeholder="Campaign Name..."
+            value={filterCampaign}
+            onChange={(e) => setFilterCampaign(e.target.value)}
+            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all text-gray-900 font-medium"
+          />
+
+          {/* Today Filter */}
+          <label className="flex items-center gap-2 px-4 py-3 border-2 border-gray-200 rounded-xl cursor-pointer hover:bg-gray-50 transition-colors">
+            <input
+              type="checkbox"
+              checked={filterToday}
+              onChange={(e) => setFilterToday(e.target.checked)}
+              className="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+            />
+            <span className="font-semibold text-gray-700">Created Today</span>
+          </label>
+
           {/* Clear Filters */}
           <button
             onClick={() => {
@@ -113,6 +137,8 @@ const LeadsFilters = ({
               setFilterPriority('all');
               setFilterSource('all');
               setFilterStaff('all');
+              setFilterCampaign('');
+              setFilterToday(false);
             }}
             className="px-4 py-3 h-[46px] border-2 border-gray-200 rounded-xl hover:bg-gradient-to-r hover:from-red-50 hover:to-orange-50 hover:border-red-300 flex items-center justify-center gap-2 transition-all duration-200 font-semibold text-gray-700 hover:text-red-700 group mt-[2px]"
           >
